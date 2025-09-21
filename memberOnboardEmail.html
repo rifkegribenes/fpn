@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+  <body style="font-family:Arial,sans-serif;">
+    <p>Hi <?= memberName ?>,</p>
+
+    <p>Thanks for signing up for the Friends of Portland NET workspace. You can access your neighborhood team page at <a href="<?= teamPageURL ?>"><?= teamPageURL ?></a>. The team page includes upcoming meeting dates, past meeting minutes, neighborhood team announcements, a team roster, and other information.</p>
+
+    <? var list = (leadsArray || []); ?>
+    <? if (list.length) { ?>
+      <p>The team lead(s) for the <?= teamName ?> team are:</p>
+      <ul>
+        <? list.forEach(function(item, i) { ?>
+          <li>
+            <strong><?= item.teamLeadName ?></strong>
+            <? if (item.teamLeadEmail) { ?> – <?= item.teamLeadEmail ?><? } ?>
+          </li>
+        <? }); ?>
+      </ul>
+      <p>Contact a team lead if you have any questions.</p>
+    <? } else { ?>
+      <!-- If supplied leads array is empty -->
+      <p>The <?= teamName ?> team currently has no team lead. If you're interested in volunteering to be a team lead, contact ??????. If you have any questions, contact ?????.</p>
+    <? } ?>
+
+    <p>– Friends of Portland NET</p>
+    <img src="cid:logo" alt="logo" width="120">
+  </body>
+</html>
