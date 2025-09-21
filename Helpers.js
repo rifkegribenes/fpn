@@ -95,7 +95,7 @@ function teamLookup(neighborhood, ss) {
         // look for team leads for the member's team
         if (String(r[tIdxM]).trim() === returnObj.team && (String(r[rIdxM]).trim().includes( 'Team Leader') || String(r[rIdxM]).trim().includes( 'Team leader'))) {
 
-          // if we find a match, gather the tea lead name and team lead email from that row
+          // if we find a match, gather the team lead name and team lead email from that row
           // TODO -- only collect this value if the teamLeadEmail field is populated --
           // set some other fallback if there is only a personal email
           const teamLeadName = `${String(r[fIdxM]).trim()} ${String(r[lIdxM]).trim()}` || '';
@@ -166,43 +166,76 @@ function addToGroupIdempotent_(groupEmail, userEmail) {
   Logger.log(`ADDED: ${userEmail} → ${groupEmail} (${res.status || 'ok'})`);
 }
 
+/** now idempotent: checks for matching email address in target sheet and updates existing if finds match */
 function copyRowToAnotherSheet(sourceSheet, targetSheet) {
 
   console.log(`copyRowToAnotherSheet`);
   
   // Get the header row from the source sheet (assuming headers are in the first row)
-  var sourceHeaders = sourceSheet.getRange(1, 1, 1, sourceSheet.getLastColumn()).getValues()[0];
+  const sourceHeaders = sourceSheet.getRange(1, 1, 1, sourceSheet.getLastColumn()).getValues()[0];
   
   // Get the active row number in the source sheet (the row you want to copy)
-  var activeRow = sourceSheet.getActiveCell().getRow();
+  const activeRow = sourceSheet.getActiveCell().getRow();
   
   // Get the data from the active row in the source sheet
-  var sourceRowData = sourceSheet.getRange(activeRow, 1, 1, sourceSheet.getLastColumn()).getValues()[0];
+  const sourceRowData = sourceSheet.getRange(activeRow, 1, 1, sourceSheet.getLastColumn()).getValues()[0];
   
   // Get the header row from the target sheet (assuming headers are also in the first row of the target sheet)
-  var targetHeaders = targetSheet.getRange(1, 1, 1, targetSheet.getLastColumn()).getValues()[0];
+  const targetHeaders = targetSheet.getRange(1, 1, 1, targetSheet.getLastColumn()).getValues()[0];
   
   // Create an empty array to store the row data in the order of the target sheet headers
-  var targetRowData = new Array(targetHeaders.length).fill(""); // Empty array to match the number of target columns
+  const targetRowData = new Array(targetHeaders.length).fill(""); // Empty array to match the number of target columns
   
+  // identify the index (position in the row array) of the email column in each sheet
+  const eIdxT = targetHeaders.indexOf('Email');
+  const eIdxS = sourceHeaders.indexOf('Email');
+
+  // save the email from the source row to a variable
+  const sourceEmail = sourceRowData[eIdxS];
+  console.log(`sourceEmail: ${sourceEmail}`);
+
   // Loop through the source headers and match with the target headers
   for (var i = 0; i < sourceHeaders.length; i++) {
-    var sourceHeader = sourceHeaders[i];
+    const sourceHeader = sourceHeaders[i];
     
     // Check if the source header matches any header in the target sheet
-    var targetIndex = targetHeaders.indexOf(sourceHeader);
+    const targetIndex = targetHeaders.indexOf(sourceHeader);
     
     // If there's a match, copy the source row data to the correct column in the target row
     if (targetIndex !== -1) {
       targetRowData[targetIndex] = sourceRowData[i];
     }
   }
+
+  // Before adding the row, search the target sheet for a record matching the new row on email address
+  const targetRows = [ ...readSheet_(targetSheet).rows ];
+
+  let match = false; // setting this variable so we can test whether a match was found later
+
+  // loop through the rows in the target sheet
+      // in each row, check to see if the email matches the email in the form submission
+      for (const [rIdxT, r] of targetRows.entries() ) {
+        if (String(r[eIdxT]).trim() === sourceEmail) {
+          console.log(`match found: row ${rIdxT + 2}, ${r[eIdxT]}`);
+          // if we find a match, UPDATE this row with values from the form submission instead of adding a new row
+          // Set the target row data in the next available row in the target sheet
+          // add two to index because array is zero-indexed and we exclude the header row
+          targetSheet.getRange(rIdxT + 2, 1, 1, targetRowData.length).setValues([targetRowData]);
+          console.log('found match, aborting loop and returning');
+          match = true;
+          break;
+        }
+      }
+  console.log(`match: ${match}`);
+  if (!match) {
+    console.log('no match; adding new row');
+    // If no match, find the next empty row in the target sheet to paste the data
+    const nextRow = targetSheet.getLastRow() + 1;
+    
+    // Set the target row data in the next available row in the target sheet
+    targetSheet.getRange(nextRow, 1, 1, targetRowData.length).setValues([targetRowData]);
+  }
   
-  // Find the next empty row in the target sheet to paste the data
-  var nextRow = targetSheet.getLastRow() + 1;
-  
-  // Set the target row data in the next available row in the target sheet
-  targetSheet.getRange(nextRow, 1, 1, targetRowData.length).setValues([targetRowData]);
 }
 
 function whoRunsMe() {
