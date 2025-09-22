@@ -3,6 +3,18 @@ function authorizeOnce() {
   GmailApp.getAliases();
 }
 
+function showLinkedFormUrl() {
+  const ss = SpreadsheetApp.getActive();
+  const url = ss.getFormUrl(); // null if no assigned form
+  Logger.log(url || 'No form assigned to this spreadsheet.');
+}
+
+function getEditUrlFromSheet() {
+  const ss = SpreadsheetApp.getActive();
+  const editUrl = ss.getFormUrl(); // null if no assigned form
+  Logger.log(editUrl || 'No form assigned');
+}
+
 
 function teamLookup(neighborhood, ss) {
   console.log('teamLookup');
