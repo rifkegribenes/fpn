@@ -5,6 +5,7 @@ function onEditHandler(e) {
   if (!e) return;
   const ss = e.source;  
   const sh = ss.getActiveSheet();
+
   if (sh.getName() !== 'WorkspaceRegForm') return;   
   if (e.range.getColumn() !== 1) return;       // column A = 1
   if (e.range.getRow() < 2) return;            // skip header

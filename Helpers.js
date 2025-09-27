@@ -15,6 +15,19 @@ function getEditUrlFromSheet() {
   Logger.log(editUrl || 'No form assigned');
 }
 
+// adds checkbox to column A
+function onFormSubmitHandler(e) {
+  const sheet = e.source.getActiveSheet();
+  const lastRow = sheet.getLastRow();
+  const checkboxCol = 1; // Column A
+
+  const checkboxCell = sheet.getRange(lastRow, checkboxCol);
+  
+  // Only set value to false (unchecked); assumes cell already formatted as checkbox
+  if (checkboxCell.getValue() === '') {
+    checkboxCell.setValue(false);
+  }
+}
 
 function teamLookup(neighborhood, ss) {
   console.log('teamLookup');
