@@ -1,12 +1,16 @@
 // run this function from the script editor to grant oAuth scopes for different GWS assets (sendMail, access drive, groups, etc.)
 function authorizeOnce() {
-  GmailApp.getAliases();
+  DriveApp.getRootFolder();
 }
 
 function showLinkedFormUrl() {
   const ss = SpreadsheetApp.getActive();
   const url = ss.getFormUrl(); // null if no assigned form
   Logger.log(url || 'No form assigned to this spreadsheet.');
+}
+
+function formatDate(date) {
+  return Utilities.formatDate(date, Session.getScriptTimeZone(), "MMM d, yyyy");
 }
 
 function getEditUrlFromSheet() {
