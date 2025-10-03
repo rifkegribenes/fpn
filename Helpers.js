@@ -91,7 +91,8 @@ function tlTeamLookup(email, ss) {
 
 
   // find location lookup sheet
-  const locSheet = ss.getSheetByName('Location Lookup');
+  const locSheet = ss.getSheetByName('LocationLookup');
+  console.log(`locSheet: ${locSheet}`);
 
   // find header and rows in location lookup sheet
   const locHeaders = [ ...readSheet_(locSheet).headers ];
@@ -100,11 +101,13 @@ function tlTeamLookup(email, ss) {
   // identify the indices (position in the row array) for each of the field names we care about in the location lookup sheet
   const eIdxL = locHeaders.indexOf('Team Lead email');
   const tIdxL = locHeaders.indexOf('Team');
+  // console.log(`eIdxL: ${eIdxL}, tIdxL: ${tIdxL}`);
 
   // loop through the rows in the location lookup sheet
   // in each row, check to see if the email value sent to the function matches the Team Lead email in that row
   for (let r of locRows ) {
     // check for email match
+    // console.log(String(r[eIdxL]).trim().toLowerCase(), email);
     if (String(r[eIdxL]).trim().toLowerCase() === email) {
 
       // if we find a match, find the team in this row

@@ -1,6 +1,7 @@
 const TEAM_LEADS_GROUP_EMAIL = "team-leads@friendsofportlandnet.org"; 
 const ADMIN_GROUP_EMAIL = "adminteam@friendsofportlandnet.org"; 
-const ss = 
+const ss = SpreadsheetApp.openById('1A5wqQoAZhgk6QLFB4_8stVZUMP7iHdTrQikEa4ur4go');
+// console.log(`ss: ${ss}`);
 
 function testGroupCheck() {
   const user = "admin@friendsofportlandnet.org";
@@ -15,17 +16,15 @@ function doGet() {
 }
 
 // Called from client-side JS
-function getTeamData(teamParam, userEmail) {
+function getTeamData(teamParam) {
   // Simulate team lookup in Google Sheet
-  const sheet = SpreadsheetApp.openById('YOUR_SHEET_ID').getSheetByName('Teams');
-  const data = sheet.getDataRange().getValues();
+  const userEmail = Session.getActiveUser().getEmail();
 
   // If no team param, lookup user’s team
   let teamToShow = teamParam;
   if (!teamToShow) {
     const isTeamLead = checkGroupMembership(TEAM_LEADS_GROUP_EMAIL, userEmail);
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
-    console.log(`ss: ${ss}`);
+    // console.log(`ss: ${ss}`);
 
     // if user is a team lead, extract team from email address
     if (isTeamLead) {
@@ -43,11 +42,12 @@ function getTeamData(teamParam, userEmail) {
 
   // Simulate content per team
   const content = `<h3>Showing data for <strong>${teamToShow}</strong></h3>${renderContent(teamToShow, userEmail)}`;
-  return content;
+  console.log(content);
+  // return content;
 }
 
 
-function renderContent(team, userEmail) {
+function renderContent(userTeam, userEmail) {
   const isTeamLead = checkGroupMembership(TEAM_LEADS_GROUP_EMAIL, userEmail);
   const isAdmin = checkGroupMembership(ADMIN_GROUP_EMAIL, userEmail);
   const ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -55,9 +55,9 @@ function renderContent(team, userEmail) {
 
   let content = `
     <div style="font-family: sans-serif; padding: 20px;">
-      ${showPublicContent()}
-      ${isTeamLead ? showTeamLeadContent() : ""}
-      ${isAdmin ? showAdminContent() : ""}
+      ${showPublicContent(userTeam)}
+      ${isTeamLead ? showTeamLeadContent(userTeam) : ""}
+      ${isAdmin ? showAdminContent(userTeam) : ""}
     </div>
   `;
 
@@ -74,7 +74,7 @@ function checkGroupMembership(groupEmail, userEmail) {
   }
 }
 
-function showPublicContent() {
+function showPublicContent(userTeam) {
   return `
     <h2>Public content: ${userTeam}</h2>
   `;
