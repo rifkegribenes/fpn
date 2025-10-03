@@ -4,7 +4,6 @@ function authorizeOnce() {
 }
 
 function showLinkedFormUrl() {
-  const ss = SpreadsheetApp.getActive();
   const url = ss.getFormUrl(); // null if no assigned form
   Logger.log(url || 'No form assigned to this spreadsheet.');
 }
@@ -14,7 +13,6 @@ function formatDate(date) {
 }
 
 function getEditUrlFromSheet() {
-  const ss = SpreadsheetApp.getActive();
   const editUrl = ss.getFormUrl(); // null if no assigned form
   Logger.log(editUrl || 'No form assigned');
 }
@@ -48,10 +46,6 @@ function neighborhoodLookup(email, ss) {
       return null;
     }
 
-
-  // find master members sheet
-  const membersSheet = ss.getSheetByName('MasterMembers');
-
   // find header and rows in master members sheet
   const mbrHeaders = [ ...readSheet_(membersSheet).headers ];
   const mbrRows = [ ...readSheet_(membersSheet).rows ];
@@ -75,11 +69,11 @@ function neighborhoodLookup(email, ss) {
 
 };
 
-/** takes a team lead email address and sheet as inputs,
+/** takes a team lead email address and as input,
    * returns a team as output
    * 
    * */
-function tlTeamLookup(email, ss) {
+function tlTeamLookup(email) {
   console.log('tlTeamLookup');
   console.log(`email: ${email}`);
 
@@ -88,11 +82,6 @@ function tlTeamLookup(email, ss) {
       console.log('no email provided');
       return null;
     }
-
-
-  // find location lookup sheet
-  const locSheet = ss.getSheetByName('LocationLookup');
-  console.log(`locSheet: ${locSheet}`);
 
   // find header and rows in location lookup sheet
   const locHeaders = [ ...readSheet_(locSheet).headers ];
@@ -122,7 +111,7 @@ function tlTeamLookup(email, ss) {
 
 
 
-/** takes a neighborhood and sheet as inputs,
+/** takes a neighborhood as input,
    * returns an object containing a group name and team page URL, and an array of team lead names and emails as output 
    * 
    * returnObj: {
@@ -142,19 +131,14 @@ function tlTeamLookup(email, ss) {
    * }
    * 
    * */
-function teamLookup(neighborhood, ss) {
+function teamLookup(neighborhood) {
   console.log('teamLookup');
   // console.log(`neighborhood: ${neighborhood}`);
     // if there's no neighborhood input, the function doesn't run
     if (!neighborhood) {
       console.log('no neighborhood provided');
       return null;
-    }
-      // find location lookup sheet
-      const locSheet = ss.getSheetByName('LocationLookup');
-
-      // find master members sheet
-      const membersSheet = ss.getSheetByName('MasterMembers');
+    }   
 
       // find header and rows in location lookup sheet
       const locHeaders = [ ...readSheet_(locSheet).headers ];
@@ -239,12 +223,21 @@ function teamLookup(neighborhood, ss) {
 
 
 function readSheet_(sheet) {
-  const rng = sheet.getDataRange();
-  const values = rng.getValues();
-  if (values.length === 0) return { headers: [], rows: [] };
-  const headers = values[0].map(v => String(v).trim());
-  const rows = values.slice(1);
-  return { headers, rows };
+  if (!sheet) {
+    console.log(`no sheet provided to readSheet`);
+    return null;
+  }
+  try {
+    const rng = sheet.getDataRange();
+    const values = rng.getValues();
+    if (values.length === 0) return { headers: [], rows: [] };
+    const headers = values[0].map(v => String(v).trim());
+    const rows = values.slice(1);
+    return { headers, rows };
+  } catch (err) {
+    console.log(`error in readSheet: ${err}`);
+  }
+  
 }
 
 /** Idempotent add: checks membership first; uses AdminDirectory for reliability */

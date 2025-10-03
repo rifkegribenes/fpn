@@ -3,8 +3,8 @@
 function onEditHandler(e) {
   console.log('onEdit');
   if (!e) return;
-  const ss = e.source;  
-  const sh = ss.getActiveSheet();
+  const ssActive = e.source;  
+  const sh = ssActive.getActiveSheet();
 
   if (sh.getName() !== 'WorkspaceRegForm') return;   
   if (e.range.getColumn() !== 1) return;       // column A = 1
@@ -14,7 +14,7 @@ function onEditHandler(e) {
   try {
     // console.log('row:');
     // console.log(e.range.getRow()); // this is a row number, not the row data
-    processNewNET(e.range.getRow(), ss, sh);
+    processNewNET(e.range.getRow(), ssActive, sh);
   } finally {
     /** to reset the checkbox after the script runs, uncomment the row below this comment. for now it leaves the box checked so we can see who has been processed, and admins can manually uncheck/recheck the box if a row needs to be reprocessed for any reason */ 
 

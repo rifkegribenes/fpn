@@ -7,6 +7,7 @@
     </style>
   </head>
   <body>
+    <h2>This is the content from index.html</h2>
     <div id="teamContent">Loading team info...</div>
 
     <script>
@@ -20,6 +21,8 @@
       // Call the server-side function — no email passed here
       google.script.run
         .withSuccessHandler(function(content) {
+          console.log('withSuccessHandler function');
+          console.log(content);
           document.getElementById("teamContent").innerHTML = content;
         })
         .getTeamData(team); // team is passed; email will be detected on server
