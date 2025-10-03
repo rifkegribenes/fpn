@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <style>
+      body { font-family: Arial, sans-serif; padding: 20px; }
+    </style>
+  </head>
+  <body>
+    <div id="teamContent">Loading team info...</div>
+
+    <script>
+      // Parse ?team= from parent URL
+      function getQueryParam(param) {
+        const urlParams = new URLSearchParams(window.parent.location.search);
+        return urlParams.get(param);
+      }
+
+      const team = getQueryParam("team");
+
+      // Get user email and call Apps Script backend
+      google.script.run
+        .withSuccessHandler(function(content) {
+          document.getElementById("teamContent").innerHTML = content;
+        })
+        .getTeamData(team, Session.getActiveUser().getEmail());
+    </script>
+  </body>
+</html>
+

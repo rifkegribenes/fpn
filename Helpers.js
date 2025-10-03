@@ -33,10 +33,93 @@ function onFormSubmitHandler(e) {
   }
 }
 
-function teamLookup(neighborhood, ss) {
-  console.log('teamLookup');
-  // console.log(`neighborhood: ${neighborhood}`);
-  /** takes a neighborhood and sheet as inputs,
+
+/** takes an email address and sheet as inputs,
+   * returns a neighborhood as output
+   * 
+   * */
+function neighborhoodLookup(email, ss) {
+  console.log('neighborhoodLookup');
+  console.log(`email: ${email}`);
+
+  // if there's no email input, the function doesn't run
+    if (!email) {
+      console.log('no email provided');
+      return null;
+    }
+
+
+  // find master members sheet
+  const membersSheet = ss.getSheetByName('MasterMembers');
+
+  // find header and rows in master members sheet
+  const mbrHeaders = [ ...readSheet_(membersSheet).headers ];
+  const mbrRows = [ ...readSheet_(membersSheet).rows ];
+
+  // identify the indices (position in the row array) for each of the field names we care about in the members master sheet
+  const nIdxM = mbrHeaders.indexOf('Neighborhood');
+  const eIdxM = mbrHeaders.indexOf('Email');
+
+  // loop through the rows in the members master sheet
+  // in each row, check to see if the email value sent to the function matches the email in that row
+  for (let r of mbrRows ) {
+    // check for email match
+    if (String(r[eIdxM]).trim().toLowerCase() === email) {
+
+      // if we find a match, find the neighborhood in this row
+      const neighborhood = String(r[nIdxM] || '').trim();
+      console.log(`neighborhood: ${neighborhood}`);
+      return neighborhood;
+    }
+  }
+
+};
+
+/** takes a team lead email address and sheet as inputs,
+   * returns a team as output
+   * 
+   * */
+function tlTeamLookup(email, ss) {
+  console.log('tlTeamLookup');
+  console.log(`email: ${email}`);
+
+  // if there's no email input, the function doesn't run
+    if (!email) {
+      console.log('no email provided');
+      return null;
+    }
+
+
+  // find location lookup sheet
+  const locSheet = ss.getSheetByName('Location Lookup');
+
+  // find header and rows in location lookup sheet
+  const locHeaders = [ ...readSheet_(locSheet).headers ];
+  const locRows = [ ...readSheet_(locSheet).rows ];
+
+  // identify the indices (position in the row array) for each of the field names we care about in the location lookup sheet
+  const eIdxL = locHeaders.indexOf('Team Lead email');
+  const tIdxL = locHeaders.indexOf('Team');
+
+  // loop through the rows in the location lookup sheet
+  // in each row, check to see if the email value sent to the function matches the Team Lead email in that row
+  for (let r of locRows ) {
+    // check for email match
+    if (String(r[eIdxL]).trim().toLowerCase() === email) {
+
+      // if we find a match, find the team in this row
+      const team = String(r[tIdxL] || '').trim();
+      console.log(`team: ${team}`);
+      return team;
+    }
+  }
+
+};
+
+
+
+
+/** takes a neighborhood and sheet as inputs,
    * returns an object containing a group name and team page URL, and an array of team lead names and emails as output 
    * 
    * returnObj: {
@@ -56,7 +139,9 @@ function teamLookup(neighborhood, ss) {
    * }
    * 
    * */
-
+function teamLookup(neighborhood, ss) {
+  console.log('teamLookup');
+  // console.log(`neighborhood: ${neighborhood}`);
     // if there's no neighborhood input, the function doesn't run
     if (!neighborhood) {
       console.log('no neighborhood provided');
