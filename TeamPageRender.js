@@ -7,38 +7,12 @@ function testGroupCheck() {
   Logger.log(checkGroupMembership(user));
 }
 
-// function doGet(e) {
-//   console.log(`doGet`);
-//   // Load the base HTML template
-//   // const team = e.parameter.team;
-//   // console.log(`doGet team ${team}`);
-//   const template = HtmlService.createTemplateFromFile("TeamPageTemplate");
-//   // template.team = team;
-//   return template.evaluate()
-//     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
-// }
-
-/// THIS ONE WORKS
-// function doGet(e) {
-//   console.log('doGet e.parameter:', e.parameter);
-//   const team = e.parameter.team || 'defaultTeam';
-//   const template = HtmlService.createTemplateFromFile('Minimal');
-//   template.team = team;
-//   return template.evaluate();
-// }
-
 function doGet(e) {
   const team = e.parameter.team || '';  // fallback to empty or logged-in user team
   const template = HtmlService.createTemplateFromFile('TeamPageTemplate');
   template.team = team;  // pass to template
-  return template.evaluate()
-                 .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+  return template.evaluate().setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 }
-
-
-
-
-
 
 
 // Called from client-side JS
@@ -47,8 +21,11 @@ function getTeamData(teamParam) {
   console.log(`teamParam: ${teamParam}`);
   const userEmail = Session.getActiveUser().getEmail();
 
+  // teamParam is shortname, fetch full name of team from param
+  const team = teamNameLookupFromShortName(teamParam);
+
   // If no team param, lookup user’s team
-  let teamToShow = teamParam;
+  let teamToShow = team;
   if (!teamToShow) {
     console.log('no team param, checking if is team lead');
     const isTeamLead = checkGroupMembership(TEAM_LEADS_GROUP_EMAIL, userEmail);
@@ -74,12 +51,14 @@ function getTeamData(teamParam) {
 
 function renderContent(userTeam, userEmail) {
   console.log('renderContent');
-  const isTeamLead = checkGroupMembership(TEAM_LEADS_GROUP_EMAIL, userEmail);
   const isAdmin = checkGroupMembership(ADMIN_GROUP_EMAIL, userEmail);
-  console.log(`ss: ${ss}`);
+  const isTeamLead = checkGroupMembership(TEAM_LEADS_GROUP_EMAIL, userEmail);
+  const isTeamPageEditor = (isTeamLead && userEmail.includes(shortNameLookup(userTeam))) || isAdmin;
+  console.log(`isAdmin: ${isAdmin}, isTeamLead: ${isTeamLead}, isTeamPageEditor: ${isTeamPageEditor}`);
 
   let content = `
     <div padding: 20px; font-family: Lato, sans-serif;">
+      ${showTeamPageEditorContent(userTeam)}
       ${showPublicContent(userTeam)}
     </div>
   `;
@@ -108,7 +87,7 @@ function showPublicContent(userTeam) {
         <div class="announcements block" style="max-width: 400px;">
           <h3 class="blockhead">Announcements</h3>
           <div class="announcements cont" style="padding-right: 20px; margin-right: 20px; border-right: 1px dotted #ccc;">
-            ${getRecentAnnouncements(userTeam).map(item => renderAnnouncement(item)).join('')}
+            ${announcementsBlock(userTeam)}
           </div>
         </div>
         <div class="calendar block" style="max-width: 400px;">
@@ -139,6 +118,22 @@ function showPublicContent(userTeam) {
       </div>
     </div>
   `;
+}
+
+function showTeamPageEditorContent(team) {
+  return `
+    <div class="tlContainer container">
+      <h3><a href="https://docs.google.com/forms/d/e/1FAIpQLSe9TU8URPswEVELyy9jOImY2_2vJ9OOE7O8L5JlNUuiJzPQYQ/viewform?usp=pp_url&entry.1458714000=${encodeURIComponent(team)}" target="_blank">Update ${team} team page</a></h3>
+    </div>`
+}
+
+function announcementsBlock(team) {
+  if (getRecentAnnouncements(team) && getRecentAnnouncements(team).length) {
+    return getRecentAnnouncements(team).map(item => renderAnnouncement(item)).join('');
+  } else {
+    return `<p>No announcements for ${team}</p>`
+  }
+  
 }
 
 function renderAnnouncement(obj) {

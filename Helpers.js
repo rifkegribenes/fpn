@@ -110,6 +110,43 @@ function shortNameLookup(team = 'Test2', ss) {
   }
 }
 
+/** takes a short name as input,
+   * returns a team name as output
+   * 
+   * */
+function teamNameLookupFromShortName(shortName, ss) {
+  console.log('teamNameLookupFromShortName');
+  console.log(`shortName: ${shortName}`);
+
+  // if there's no shortName input, the function doesn't run
+    if (!shortName) {
+      console.log('no shortName provided');
+      return null;
+    }
+
+  // find header and rows in location lookup sheet
+  const locHeaders = [ ...readSheet_(locSheet).headers ];
+  const locRows = [ ...readSheet_(locSheet).rows ];
+
+  // identify the indices (position in the row array) for each of the field names we care about in the location lookup sheet
+  const sIdxL = locHeaders.indexOf('Short name');
+  const tIdxL = locHeaders.indexOf('Team');
+
+  // loop through the rows in the location lookup sheet
+  // in each row, check to see if the shortName value sent to the function matches the shortName in that row
+  for (let r of locRows ) {
+    // check for team match
+    // console.log(String(r[tIdxL]).trim().toLowerCase(), team.trim().toLowerCase());
+    if (String(r[sIdxL]).trim().toLowerCase() === shortName.trim().toLowerCase()) {
+
+      // if we find a match, find the team name link in this row
+      const team = String(r[tIdxL] || '').trim();
+      console.log(team);
+      return team;
+    }
+  }
+}
+
 
 /** takes an email address and sheet as inputs,
    * returns a neighborhood as output
