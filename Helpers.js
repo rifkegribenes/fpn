@@ -31,6 +31,44 @@ function onFormSubmitHandler(e) {
   }
 }
 
+/** takes a team as input,
+   * returns a calendar link as output
+   * 
+   * */
+function calendarLookup(team = 'Test2', ss) {
+  console.log('calendarLookup');
+  console.log(`team: ${team}`);
+
+  // if there's no team input, the function doesn't run
+    if (!team) {
+      console.log('no team provided');
+      return null;
+    }
+
+  // find header and rows in location lookup sheet
+  const locHeaders = [ ...readSheet_(locSheet).headers ];
+  const locRows = [ ...readSheet_(locSheet).rows ];
+
+  // identify the indices (position in the row array) for each of the field names we care about in the location lookup sheet
+  const cIdxL = locHeaders.indexOf('Team calendar link');
+  const tIdxL = locHeaders.indexOf('Team');
+  console.log(`cIdxL: ${cIdxL}, tIdxL: ${tIdxL}`);
+
+  // loop through the rows in the location lookup sheet
+  // in each row, check to see if the team value sent to the function matches the team in that row
+  for (let r of locRows ) {
+    // check for team match
+    // console.log(String(r[tIdxL]).trim().toLowerCase(), team.trim().toLowerCase());
+    if (String(r[tIdxL]).trim().toLowerCase() === team.trim().toLowerCase()) {
+
+      // if we find a match, find the calendar link in this row
+      const teamCalendar = String(r[cIdxL] || '').trim();
+      console.log(`teamCalendar: ${teamCalendar}`);
+      return teamCalendar;
+    }
+  }
+}
+
 
 /** takes an email address and sheet as inputs,
    * returns a neighborhood as output
@@ -58,7 +96,7 @@ function neighborhoodLookup(email, ss) {
   // in each row, check to see if the email value sent to the function matches the email in that row
   for (let r of mbrRows ) {
     // check for email match
-    if (String(r[eIdxM]).trim().toLowerCase() === email) {
+    if (String(r[eIdxM]).trim().toLowerCase() === email.trim().toLowerCase()) {
 
       // if we find a match, find the neighborhood in this row
       const neighborhood = String(r[nIdxM] || '').trim();
@@ -97,7 +135,7 @@ function tlTeamLookup(email) {
   for (let r of locRows ) {
     // check for email match
     // console.log(String(r[eIdxL]).trim().toLowerCase(), email);
-    if (String(r[eIdxL]).trim().toLowerCase() === email) {
+    if (String(r[eIdxL]).trim().toLowerCase() === email.trim().toLowerCase()) {
 
       // if we find a match, find the team in this row
       const team = String(r[tIdxL] || '').trim();
@@ -112,12 +150,13 @@ function tlTeamLookup(email) {
 
 
 /** takes a neighborhood as input,
-   * returns an object containing a group name and team page URL, and an array of team lead names and emails as output 
+   * returns an object containing a group name, team page URL, team calendar link, and an array of team lead names and emails as output 
    * 
    * returnObj: {
    *  group: 'testteam@friendsofportlandnet.org',
    *  team: 'teamName',
    *  teamPageURL: 'https://sites.google.com/view/fpn/testteam',
+   *  teamCalendar: 'https://calendar.google.com/calendar/u/0/embed?color=%23cabdbf&src=c_e33f3b624ab1918a14909f825850c630ac8db222a4459c2b80643c03930d856c@group.calendar.google.com'
    *  leadsArray: [
    *    {
    *      teamLeadName: 'firstName1 lastName1',
@@ -153,6 +192,7 @@ function teamLookup(neighborhood) {
       const tIdxL = locHeaders.indexOf('Team');
       const gIdx = locHeaders.indexOf('Team Group Email');
       const tpIdx = locHeaders.indexOf('Team page');
+      const cIdxL = locHeaders.indexOf('Team calendar link');
 
       // if those field headers don't exist, the function doesn't work; throw error
       if (tIdxL === -1 || gIdx === -1 || nIdxL === -1, tpIdx === -1) {
@@ -169,15 +209,17 @@ function teamLookup(neighborhood) {
       for (let r of locRows) {
         if (String(r[nIdxL]).trim() === neighborhood) {
 
-          // if we find a match, gather the group email, team name, and team page URL from that row
+          // if we find a match, gather the group email, team name, calendar link, and team page URL from that row
           const group = String(r[gIdx] || '').trim();
           const team = String(r[tIdxL] || '').trim();
           const teamPageURL = String(r[tpIdx] || '').trim();
+          const teamCalendar = String(r[cIdxL] || '').trim();
 
           // store those values in the return object
           returnObj.group = group;
           returnObj.team = team;
           returnObj.teamPageURL = teamPageURL;
+          returnObj.teamCalendar = teamCalendar;
         }
       }
 
