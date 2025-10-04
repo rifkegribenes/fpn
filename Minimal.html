@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html>
+  <head><title>Test Params</title></head>
+  <body>
+    <script>
+  const team = <?= JSON.stringify(team) ?>;
+  console.log('Team param passed from server:', team);
+  document.body.innerHTML = `<h1>Team param: ${team}</h1>`;
+</script>
+
+  </body>
+</html>

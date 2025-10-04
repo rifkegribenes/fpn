@@ -7,12 +7,39 @@ function testGroupCheck() {
   Logger.log(checkGroupMembership(user));
 }
 
-function doGet() {
-  // Load the base HTML template
-  const template = HtmlService.createTemplateFromFile("TeamPageTemplate");
+// function doGet(e) {
+//   console.log(`doGet`);
+//   // Load the base HTML template
+//   // const team = e.parameter.team;
+//   // console.log(`doGet team ${team}`);
+//   const template = HtmlService.createTemplateFromFile("TeamPageTemplate");
+//   // template.team = team;
+//   return template.evaluate()
+//     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+// }
+
+/// THIS ONE WORKS
+// function doGet(e) {
+//   console.log('doGet e.parameter:', e.parameter);
+//   const team = e.parameter.team || 'defaultTeam';
+//   const template = HtmlService.createTemplateFromFile('Minimal');
+//   template.team = team;
+//   return template.evaluate();
+// }
+
+function doGet(e) {
+  const team = e.parameter.team || '';  // fallback to empty or logged-in user team
+  const template = HtmlService.createTemplateFromFile('TeamPageTemplate');
+  template.team = team;  // pass to template
   return template.evaluate()
-    .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+                 .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 }
+
+
+
+
+
+
 
 // Called from client-side JS
 function getTeamData(teamParam) {
@@ -54,13 +81,11 @@ function renderContent(userTeam, userEmail) {
   let content = `
     <div padding: 20px; font-family: Lato, sans-serif;">
       ${showPublicContent(userTeam)}
-      ${isTeamLead ? showTeamLeadContent(userTeam) : ""}
-      ${isAdmin ? showAdminContent(userTeam) : ""}
     </div>
   `;
 
-  console.log('content');
-  console.log(content);
+  // console.log('content');
+  // console.log(content);
 
   return content;
 }
@@ -92,7 +117,7 @@ function showPublicContent(userTeam) {
             ${renderCalendar(userTeam)}
           </div>
         </div>
-        <div class="pcColumnContainer container" style="display:flex !important; flex-direction:column; flex-wrap:wrap;">
+        <div class="pcColumnContainer container" style="display:flex !important; flex-direction:column; flex-wrap:wrap; max-width:200px;">
           <div class="minutes block" style="padding-bottom: 20px; margin-bottom: 20px; border-bottom: 1px dotted #ccc;">
             <h3 class="blockhead">Meeting Minutes</h3>
             <div class="minutes cont" style="">
@@ -107,31 +132,18 @@ function showPublicContent(userTeam) {
           </div>
           <div class="grouplink block">
             <h3 class="blockhead">Google Group</h3>
+            <div class="gGroup cont" style="">
+              ${renderGoogleGroup(userTeam)}
+            </div>
           </div>
       </div>
     </div>
   `;
 }
 
-function showTeamLeadContent() {
-  console.log('showTeamLeadContent');
-  return `
-    <h3>Team Lead Resources</h3>
-    <iframe src="https://docs.google.com/forms/d/e/1FAIpQLSe9TU8URPswEVELyy9jOImY2_2vJ9OOE7O8L5JlNUuiJzPQYQ/viewform?embedded=true" width="640" height="800" frameborder="0">Loading…</iframe>
-  `;
-}
-
-function showAdminContent() {
-  console.log('showAdminContent');
-  return `
-    <h3>Admin only content</h3>
-    <p>Here's some text or another form.</p>
-  `;
-}
-
 function renderAnnouncement(obj) {
   return `<div class="announcement">
-    <h4 class="aTitle" style="margin-bottom: 10px;">${obj.title}&#160;&#160;&#8226;&#160;&#160;<span class="aDate" style="color:#333;font-weight:300;">${formatDate(obj.timestamp)}</span></h4>
+    <h4 class="aTitle" style="margin-bottom: 10px;">${obj.title}&#160;&#160;&#x7C;&#160;&#160;<span class="aDate" style="color:#333;font-weight:400;">${formatDate(obj.timestamp)}</span></h4>
     <p class="aBody">${obj.body}</p>
   </div>`
 }
@@ -181,13 +193,56 @@ function getRecentAnnouncements(team = 'Test2') {
       body: row[BODY_COL]
     };
   });
-  console.log(recentAnnouncements);
+  // console.log(recentAnnouncements);
   return recentAnnouncements;
 }
 
-// this prepends the team name to meeting minutes and ops plan files so they can be found later in the drive folder
-function onFormSubmit(e) {
+function renameFile(team, file, fileType, meetingDate) {
+  
+  // Only touch recently added files (e.g. last 60 seconds)
+  const created = file.getDateCreated();
+  const now = new Date();
+  const ageInSeconds = (now - created) / 1000;
+  // console.log(`ageInSeconds: ${ageInSeconds}`);
+
+  const mtgDate = meetingDate ? formatDateFileName(new Date(meetingDate)) : null;
+  console.log(`mtgDate: ${mtgDate}`);
+
+  if (ageInSeconds < 60) {
+    // console.log(`ageInSeconds < 60`);
+    console.log('renameFile');
+    const originalName = file.getName();
+    let newName = '';
+    if (mtgDate) {
+      newName = `${team}_${fileType}_${mtgDate}_${originalName}`;
+    } else {
+      newName = `${team}_${fileType}_${originalName}`;
+    }
+    console.log(`originalName: ${originalName}`);
+    console.log(`newName: ${newName}`);
+    file.setName(newName);
+    file.setDescription(team);
+    console.log(`file description: *********************`);
+    console.log(file.getDescription());
+    console.log(`mtgDate: ${mtgDate}`);
+    if (mtgDate) {
+      let currentDesc = file.getDescription() || "";
+      currentDesc = currentDesc += `,${mtgDate}`;
+      file.setDescription(currentDesc);
+      console.log(`file description with mtgDate:`);
+      console.log(file.getDescription());
+    }
+  } else {
+    // console.log(`skipping older file ${ageInSeconds}`);
+  }
+}
+
+
+// prepends the team name to meeting minutes and ops plan files so they can be found later in the drive folder
+function onFormSubmitHandler2(e) {
+  console.log(`onFormSubmitHandler2`);
   const sheetName = e.range.getSheet().getName();
+  console.log(`sheetName = ${sheetName}`);
 
   // Only run if the response is from the specific form tab
   if (sheetName !== "TeamPageUpdateForm") {
@@ -197,112 +252,145 @@ function onFormSubmit(e) {
   // Proceed with your file upload logic
   const responses = e.namedValues;
   const team = responses["Your Team"][0]; 
-  const fileType = responses["What do you want to update?"][0].contains('minutes') ? 'minutes' : responses["What do you want to update?"][0].contains('operations') ? 'ops' : '';
+  const fileType = responses["What do you want to update?"][0].includes('minutes') ? 'minutes' : responses["What do you want to update?"][0].includes('operations') ? 'ops' : '';
+  const meetingDate = responses["Date of meeting"][0];
   console.log(`team: ${team}, fileType: ${fileType}`);
 
-  const folder = DriveApp.getFolderById("1a-u90x4-GjhzyoiscckMvYx6Q1K8vAQZ"); // the folder where file uploads go
-  const files = folder.getFiles();
+  const minutesFolder = DriveApp.getFolderById(MINUTES_FOLDER_ID);
+  const opsFolder = DriveApp.getFolderById(OPS_FOLDER_ID);
+  const minutesFiles = minutesFolder.getFiles();
+  const opsFiles = opsFolder.getFiles();
 
-  while (files.hasNext()) {
-    const file = files.next();
+  if (fileType === 'minutes') {
+    while (minutesFiles.hasNext()) {
+    const file = minutesFiles.next();
+    // console.log('minutesFile');
+    // console.log(file.getName());
 
-    // Only touch recently added files (e.g. last 60 seconds)
-    const created = file.getDateCreated();
-    const now = new Date();
-    const ageInSeconds = (now - created) / 1000;
+    renameFile(team, file, fileType, meetingDate)
+  }
 
-    if (ageInSeconds < 60) {
-      const originalName = file.getName();
-      const newName = `${team}_${fileType}_${originalName}`;
-      file.setName(newName);
-      file.setDescription(`Team: ${team}`);
+  } else if (fileType === 'ops') {
+    while (opsFiles.hasNext()) {
+    const file = opsFiles.next();
+    // console.log('opsFile');
+    // console.log(file.getName());
+
+    renameFile(team, file, fileType)
+    
     }
+  } else {
+    console.log('no fileType found'
+    )
   }
 }
 
 
-function renderMinutesBlock(team) {
+function renderMinutesBlock(team = 'Test2') {
   try {
-    const folderId = '1a-u90x4-GjhzyoiscckMvYx6Q1K8vAQZ'; 
+    const folderId = MINUTES_FOLDER_ID; 
     const files = getLatestMinutesFiles(team, folderId, 10); //change to allow more files
 
-    let html = `<div style="font-family: Lato, sans-serif; font-size: 14px;">`;
+    if (!!files && files.length) {
+      let html = `<div style="font-family: Lato, sans-serif; font-size: 14px;"><ul>`;
 
-    files.forEach(file => {
-    // Try to get createdTime or fallback to createdDate or null
-    const createdDateStr = file.createdTime || null;
+      files.forEach(file => {
+      // Try to get createdTime or fallback to createdDate or null
+      const createdDateStr = file.createdTime || null;
 
-    let formattedDate = 'Unknown date';
-    if (createdDateStr) {
-      const createdDate = new Date(createdDateStr);
-      formattedDate = Utilities.formatDate(createdDate, Session.getScriptTimeZone(), "MMM d, yyyy");
+      let formattedDate = 'Unknown date';
+      let mtgDateParsed;
+      console.log(`file.getDescription() ********************: ${file.getDescription()}`);
+      if (file.getDescription()) {
+        mtgDateParsed = file.getDescription().split(",")[1] || null;
+        // console.log(`mtgDateParsed: ${mtgDateParsed}`);
+      }
+      if (mtgDateParsed) {
+        // console.log(`mtgDateParsed: ${mtgDateParsed}`);
+        formattedDate = formatDate(new Date(mtgDateParsed));
+      } else if (createdDateStr) {
+        const createdDate = new Date(createdDateStr);
+        formattedDate = Utilities.formatDate(createdDate, Session.getScriptTimeZone(), "MMM d, yyyy");
+      }
+
+      const linkText = `${team} minutes ${formattedDate}`;
+
+      const url = `https://drive.google.com/file/d/${file.id}/view`;
+      html += `<li style="margin-bottom: 10px; list-style-type: none;"><a href="${url}" target="_blank">${linkText}</a></li>`;
+    });
+    html += `</ul></div>`
+    console.log(html);
+    return html;
+    } else {
+      return `<p>No meeting minutes available for ${team}</p>`
     }
 
-    const url = `https://drive.google.com/file/d/${file.id}/view`;
-    html += `<li style="margin-bottom: 10px;"><a href="${url}" target="_blank">${file.name}</a> (${formattedDate})</li>`;
-  });
-
-    return html;
+    
   } catch (e) {
-    return `<p>Error: ${e.message}</p>`;
+    return `<p>Error: ${e.message}</p><p>No meeting minutes available for ${team}</p>`;
   }
 }
 
 function renderOpsPlanBlock(team) {
   try {
-    const folderId = '1a-u90x4-GjhzyoiscckMvYx6Q1K8vAQZ'; 
-    const files = getLatestOpsFile(team, folderId); //change to allow more files
-
-    let html = `<div style="font-family: Lato, sans-serif; font-size: 14px;">`;
-
-    files.forEach(file => {
-    // Try to get createdTime or fallback to createdDate or null
-    const createdDateStr = file.createdTime || null;
-
-    let formattedDate = 'Unknown date';
-    if (createdDateStr) {
-      const createdDate = new Date(createdDateStr);
-      formattedDate = Utilities.formatDate(createdDate, Session.getScriptTimeZone(), "MMM d, yyyy");
+    const folderId = OPS_FOLDER_ID; 
+    const file = getLatestOpsFile(team, folderId); 
+    console.log('renderOpsPlan');
+    console.log(file);
+    if (!!file) {
+      console.log('310');
+      let html = `<div style="font-family: Lato, sans-serif; font-size: 14px;">`;
+      const createdDateStr = file.createdTime || null;
+      let formattedDate = 'Unknown date';
+      if (createdDateStr) {
+        const createdDate = new Date(createdDateStr);
+        formattedDate = Utilities.formatDate(createdDate, Session.getScriptTimeZone(), "MMM d, yyyy");
+      }
+      const linkText = `${team} Operations Plan`;
+      const url = `https://drive.google.com/file/d/${file.id}/view`;
+      html += `<p style="margin-bottom: 10px; list-style-type: none;"><a href="${url}" target="_blank">${linkText}</a> (${formattedDate})</p></div>`;
+      return html;
+    } else {
+      return `<p>No operations plan available for ${team}</p>`;
     }
-
-    const url = `https://drive.google.com/file/d/${file.id}/view`;
-    html += `<li style="margin-bottom: 10px;"><a href="${url}" target="_blank">${file.name}</a> (${formattedDate})</li>`;
-  });
-
-    return html;
   } catch (e) {
-    return `<p>Error: ${e.message}</p>`;
+    return `<p>Error: ${e.message}</p><p>No operations plan available for ${team}</p>`;
   }
 }
 
 function getLatestMinutesFiles(team, folderId, maxFiles) {
-  console.log(`getLatestMinutesFiles`);
+  // console.log(`getLatestMinutesFiles`);
   const teamPrefix = `${team}_minutes`;
-  console.log(`teamPrefix: ${teamPrefix}`);
+  // console.log(`teamPrefix: ${teamPrefix}`);
   const response = Drive.Files.list({
     q: `'${folderId}' in parents and mimeType='application/pdf' and trashed=false and name contains '${teamPrefix}'`,
     orderBy: 'createdTime desc',
     maxResults: maxFiles,
-    fields: 'files(id,name,createdTime)'
+    fields: 'files(id,name,createdTime,description)'
   });
 
   return response.files || response.items || [];
 }
 
 function getLatestOpsFile(team, folderId) {
-  console.log(`getLatestOpsFile`);
+  // console.log(`getLatestOpsFile`);
   const teamPrefix = `${team}_ops`;
-  console.log(`teamPrefix: ${teamPrefix}`);
+  // console.log(`teamPrefix: ${teamPrefix}`);
   const response = Drive.Files.list({
     q: `'${folderId}' in parents and mimeType='application/pdf' and trashed=false and name contains '${teamPrefix}'`,
     orderBy: 'createdTime desc',
     maxResults: 10, // get a few in case of false positives
-    fields: 'files(id,name,createdTime)'
+    fields: 'files(id,name,createdTime,description)'
   });
 
   // Filter to the most recently created ops file
-  const matchingFile = response.files.find(file => file.name.startsWith('teamName_ops'));
-  console.log(matchingFile);
+  const matchingFile = response.files.find(file => file.name.startsWith(teamPrefix));
+  // console.log(matchingFile);
   return matchingFile || null; // Return the matching file or null if none found
+}
+
+function renderGoogleGroup(team) {
+  const groupAddress = `https://groups.google.com/a/friendsofportlandnet.org/g/${shortNameLookup(team)}`;
+  return `<a href=${groupAddress}>${team} Google Group</a>`
 }
 

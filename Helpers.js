@@ -12,6 +12,11 @@ function formatDate(date) {
   return Utilities.formatDate(date, Session.getScriptTimeZone(), "MMM d, yyyy");
 }
 
+function formatDateFileName(date) {
+  return Utilities.formatDate(date, Session.getScriptTimeZone(), "yyyy-MM-dd");
+}
+
+
 function getEditUrlFromSheet() {
   const editUrl = ss.getFormUrl(); // null if no assigned form
   Logger.log(editUrl || 'No form assigned');
@@ -52,7 +57,7 @@ function calendarLookup(team = 'Test2', ss) {
   // identify the indices (position in the row array) for each of the field names we care about in the location lookup sheet
   const cIdxL = locHeaders.indexOf('Team calendar link');
   const tIdxL = locHeaders.indexOf('Team');
-  console.log(`cIdxL: ${cIdxL}, tIdxL: ${tIdxL}`);
+  // console.log(`cIdxL: ${cIdxL}, tIdxL: ${tIdxL}`);
 
   // loop through the rows in the location lookup sheet
   // in each row, check to see if the team value sent to the function matches the team in that row
@@ -63,8 +68,44 @@ function calendarLookup(team = 'Test2', ss) {
 
       // if we find a match, find the calendar link in this row
       const teamCalendar = String(r[cIdxL] || '').trim();
-      console.log(`teamCalendar: ${teamCalendar}`);
+      // console.log(`teamCalendar: ${teamCalendar}`);
       return teamCalendar;
+    }
+  }
+}
+
+/** takes a team as input,
+   * returns a team short name as output
+   * 
+   * */
+function shortNameLookup(team = 'Test2', ss) {
+  console.log('shortNameLookup');
+  console.log(`team: ${team}`);
+
+  // if there's no team input, the function doesn't run
+    if (!team) {
+      console.log('no team provided');
+      return null;
+    }
+
+  // find header and rows in location lookup sheet
+  const locHeaders = [ ...readSheet_(locSheet).headers ];
+  const locRows = [ ...readSheet_(locSheet).rows ];
+
+  // identify the indices (position in the row array) for each of the field names we care about in the location lookup sheet
+  const sIdxL = locHeaders.indexOf('Short name');
+  const tIdxL = locHeaders.indexOf('Team');
+
+  // loop through the rows in the location lookup sheet
+  // in each row, check to see if the team value sent to the function matches the team in that row
+  for (let r of locRows ) {
+    // check for team match
+    // console.log(String(r[tIdxL]).trim().toLowerCase(), team.trim().toLowerCase());
+    if (String(r[tIdxL]).trim().toLowerCase() === team.trim().toLowerCase()) {
+
+      // if we find a match, find the short name link in this row
+      const shortName = String(r[sIdxL] || '').trim();
+      return shortName;
     }
   }
 }
@@ -112,8 +153,8 @@ function neighborhoodLookup(email, ss) {
    * 
    * */
 function tlTeamLookup(email) {
-  console.log('tlTeamLookup');
-  console.log(`email: ${email}`);
+  // console.log('tlTeamLookup');
+  // console.log(`email: ${email}`);
 
   // if there's no email input, the function doesn't run
     if (!email) {

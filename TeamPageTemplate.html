@@ -28,21 +28,21 @@
   <body>
     <div id="teamContent">Loading team info...</div>
 
-    <script>
-      function getQueryParam(param) {
-        const urlParams = new URLSearchParams(window.parent.location.search);
-        return urlParams.get(param);
-      }
+<script>
+  const teamWithQuotes = <?= JSON.stringify(team) ?>;
+  const team = teamWithQuotes.replace(/^['"]|['"]$/g, '');
+  console.log('Team param without quotes:', team);
 
-      const team = getQueryParam("team");
+  google.script.run
+    .withSuccessHandler(function(content) {
+      document.getElementById("teamContent").innerHTML = content;
+    })
+    .getTeamData(team);
+</script>
 
-      // Call the server-side function — no email passed here
-      google.script.run
-        .withSuccessHandler(function(content) {
-          document.getElementById("teamContent").innerHTML = content;
-        })
-        .getTeamData(team); // team is passed; email will be detected on server
-    </script>
+
+
+
   </body>
 </html>
 
