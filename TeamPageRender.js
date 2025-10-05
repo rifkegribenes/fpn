@@ -16,32 +16,31 @@ function doGet(e) {
 
   const action = e.parameter.action;
   const responseId = e.parameter.id;
-  console.log(`action: ${action}, responseId: ${responseId}`);
-  // Handle delete
-  if (action === 'delete' && !!responseId) {
+  const page = e.parameter.page || 'team'; // default page
+  const team = e.parameter.team || '';
+  let message = null;
+
+  if (action === 'delete' && responseId) {
     console.log('trying to delete');
     const deleted = deleteFormResponse(responseId);
-    return HtmlService.createHtmlOutput(
-      deleted ? 'Response deleted successfully.' : 'Failed to delete response.'
-    );
+    message = deleted ? 'Announcement deleted successfully.' : 'Failed to delete announcement.';
   }
-  
-  const page = e.parameter.page || 'team'; // default to 'team' page if none given
 
   if (page === 'teamLinks') {
     return HtmlService.createHtmlOutputFromFile('TeamLinksClientTemplate')
       .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
   } 
-
+  
   else if (page === 'team') {
-    const team = e.parameter.team || ''; 
     const template = HtmlService.createTemplateFromFile('TeamPageClientTemplate');
     template.team = team;
     template.headerImage = LOGO;
+    template.message = message;  // Pass message into the template
     return template.evaluate()
       .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
   }
 }
+
 
 
 
@@ -73,7 +72,6 @@ function renderContent(userTeam, userEmail) {
 
   let content = `
     <div style="padding: 20px; font-family: Lato, sans-serif;">
-      ${showLogs(userEmail, userTeam, isAdmin, isTeamLead, isTeamPageEditor)}
       ${isTeamPageEditor ? showTeamPageEditorContent(userTeam) : ''}
       ${showPublicContent(userTeam, isTeamPageEditor)}
     </div>
