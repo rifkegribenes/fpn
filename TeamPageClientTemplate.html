@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <style>
+      body {
+        font-family: Lato, sans-serif;
+        padding: 20px;
+      }
+
+      .spinner {
+        border: 6px solid #f3f3f3;
+        border-top: 6px solid #666;
+        border-radius: 50%;
+        width: 30px;
+        height: 30px;
+        margin: 40px auto;
+        animation: spin 0.8s linear infinite;
+      }
+
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+
+      #teamContent {
+        display: none;
+      }
+
+    </style>
+  </head>
+  <body>
+    <div>
+      <div>
+        <a href="https://sites.google.com/friendsofportlandnet.org/teamspace/home" aria-hidden="false" tabindex="0">
+        <img id="logo" alt="Friends of Portland NET" style="max-width: 100px;">
+        </a>
+      </div>
+    </div>
+    <div id="loading">
+      <div class="spinner"></div>
+      <p style="text-align: center;">Loading team info...</p>
+    </div>
+    <div id="teamContent"></div>
+
+    <script>
+
+      // Insert logo image after page load but only if not in iframe
+      document.addEventListener("DOMContentLoaded", function() {
+        const isInIframe = window.self !== window.top;
+        const base64ImageWithQuotes = <?= JSON.stringify(headerImage) ?>;
+        const base64Image = base64ImageWithQuotes.replace(/^"+|"+$/g, '');
+        document.getElementById("logo").src = base64Image;
+        const image = document.getElementById("logo");
+        if (!isInIframe) {
+          image.style.display = "block";
+        } else {
+          image.style.display = "none";
+        }
+      });
+
+      const teamWithQuotes = <?= JSON.stringify(team) ?>;
+      const team = teamWithQuotes.replace(/^['"]|['"]$/g, '');
+      console.log('Team param without quotes:', team);
+
+      google.script.run.withSuccessHandler(function(content) {
+        document.getElementById('loading').style.display = 'none';
+        const container = document.getElementById('teamContent');
+        container.innerHTML = content;
+        container.style.display = 'block';
+      }).getTeamData(team);
+    </script>
+
+
+  </body>
+</html>

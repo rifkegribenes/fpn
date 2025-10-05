@@ -8,57 +8,59 @@ function testGroupCheck() {
 }
 
 function doGet(e) {
-  const team = e.parameter.team || '';  // fallback to empty or logged-in user team
-  const template = HtmlService.createTemplateFromFile('TeamPageTemplate');
-  template.team = team;  // pass to template
-  return template.evaluate().setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+
+  const userEmail = Session.getActiveUser().getEmail();
+  logAccess(userEmail, e.parameter);
+  
+  const page = e.parameter.page || 'team'; // default to 'team' page if none given
+
+  if (page === 'teamLinks') {
+    return HtmlService.createHtmlOutputFromFile('TeamLinksClientTemplate')
+      .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+  } 
+
+  else if (page === 'team') {
+    const team = e.parameter.team || ''; 
+    const template = HtmlService.createTemplateFromFile('TeamPageClientTemplate');
+    template.team = team;
+    template.headerImage = LOGO;
+    return template.evaluate()
+      .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+  }
 }
+
 
 
 // Called from client-side JS
 function getTeamData(teamParam) {
   console.log('getTeamData');
   console.log(`teamParam: ${teamParam}`);
+
+  // If no team param, redirect to team links page
+  if (!teamParam) {
+    window.location.href = 'https://sites.google.com/friendsofportlandnet.org/teamspace/teams';
+  }
+
   const userEmail = Session.getActiveUser().getEmail();
 
   // teamParam is shortname, fetch full name of team from param
   const team = teamNameLookupFromShortName(teamParam);
-
-  // If no team param, lookup user’s team
-  let teamToShow = team;
-  if (!teamToShow) {
-    console.log('no team param, checking if is team lead');
-    const isTeamLead = checkGroupMembership(TEAM_LEADS_GROUP_EMAIL, userEmail);
-    // console.log(`ss: ${ss}`);
-
-    // if user is a team lead, extract team from email address
-    if (isTeamLead) {
-      teamToShow = tlTeamLookup(userEmail);
-      console.log(`team lead teamToShow: ${teamToShow}`);
-    } else {
-      // if user is NOT a team lead, find user team based on personal email
-      const neighborhood = neighborhoodLookup(userEmail);
-      teamToShow = teamLookup(neighborhood);
-      console.log(`non team lead neighborhood: ${neighborhood}, teamToShow: ${teamToShow}`);
-    }
-  }
-
-  if (!teamToShow) teamToShow = "Unknown";
-
-  return renderContent(teamToShow, userEmail);
+  return renderContent(team, userEmail);
 }
 
 
 function renderContent(userTeam, userEmail) {
   console.log('renderContent');
+  console.log(`userTeam: ${userTeam}, userEmail: ${userEmail}`);
   const isAdmin = checkGroupMembership(ADMIN_GROUP_EMAIL, userEmail);
   const isTeamLead = checkGroupMembership(TEAM_LEADS_GROUP_EMAIL, userEmail);
   const isTeamPageEditor = (isTeamLead && userEmail.includes(shortNameLookup(userTeam))) || isAdmin;
   console.log(`isAdmin: ${isAdmin}, isTeamLead: ${isTeamLead}, isTeamPageEditor: ${isTeamPageEditor}`);
 
   let content = `
-    <div padding: 20px; font-family: Lato, sans-serif;">
-      ${showTeamPageEditorContent(userTeam)}
+    <div style="padding: 20px; font-family: Lato, sans-serif;">
+      ${showLogs(userEmail, userTeam, isAdmin, isTeamLead, isTeamPageEditor)}
+      ${isTeamPageEditor ? showTeamPageEditorContent(userTeam) : ''}
       ${showPublicContent(userTeam)}
     </div>
   `;
@@ -67,6 +69,17 @@ function renderContent(userTeam, userEmail) {
   // console.log(content);
 
   return content;
+}
+
+function showLogs(userEmail, userTeam, isAdmin, isTeamLead, isTeamPageEditor){
+  // return `<div style="padding: 20px; font-family: Lato, sans-serif; color: red;">
+  //   userEmail: ${userEmail}<br/>
+  //   Session.getActiveUser().getEmail(): ${Session.getActiveUser().getEmail()}<br/>
+  //   Team: ${userTeam}<br/>
+  //   Is Admin? ${isAdmin}<br/>
+  //   Is Team Lead? ${isTeamLead}<br/>
+  //   Is Team Page Editor? ${isTeamPageEditor}<br/>
+  // </div>`
 }
 
 function checkGroupMembership(groupEmail, userEmail) {
@@ -123,8 +136,27 @@ function showPublicContent(userTeam) {
 function showTeamPageEditorContent(team) {
   return `
     <div class="tlContainer container">
-      <h3><a href="https://docs.google.com/forms/d/e/1FAIpQLSe9TU8URPswEVELyy9jOImY2_2vJ9OOE7O8L5JlNUuiJzPQYQ/viewform?usp=pp_url&entry.1458714000=${encodeURIComponent(team)}" target="_blank">Update ${team} team page</a></h3>
-    </div>`
+      <h3>
+        <a 
+          href="https://docs.google.com/forms/d/e/1FAIpQLSe9TU8URPswEVELyy9jOImY2_2vJ9OOE7O8L5JlNUuiJzPQYQ/viewform?usp=pp_url&entry.1458714000=${encodeURIComponent(team)}"
+          style="
+            display: block;
+            padding: 10px;
+            background-color: #f1f1f1;
+            text-decoration: none;
+            border-radius: 5px;
+            color: #333;
+            transition: background-color 0.2s ease;
+            width: 100%;
+            max-width: 200px;
+          "
+          onmouseover="this.style.backgroundColor='#e0e0e0';"
+          onmouseout="this.style.backgroundColor='#f1f1f1';"
+          target="_blank">
+            Update team page
+          </a>
+        </h3>
+      </div>`
 }
 
 function announcementsBlock(team) {
@@ -388,4 +420,21 @@ function renderGoogleGroup(team) {
   const groupAddress = `https://groups.google.com/a/friendsofportlandnet.org/g/${shortNameLookup(team)}`;
   return `<a href=${groupAddress}>${team} Google Group</a>`
 }
+
+function getTeamLinks() {
+  const sheet = locSheet;
+  const data = sheet.getDataRange().getValues();
+  const headers = data[0];
+  const teamIndex = headers.indexOf('Team');
+  const urlIndex = headers.indexOf('Team page');
+
+  const links = data.slice(1).map(row => ({
+    name: row[teamIndex],
+    url: row[urlIndex]
+  }));
+
+  return links;
+}
+
+
 

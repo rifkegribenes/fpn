@@ -104,16 +104,16 @@ function addToGoogleGroups(row, ss, sh) {
   }
 
   // 1) All‑Member group
-  // console.log('skipping add to all-members until permissions fixed');
-  addToGroupIdempotent_('all-members@friendsofportlandnet.org', email);
-  console.log(`added ${email} to all-members@friendsofportlandnet.org`);
+  console.log('skipping add to all-members; only adding individuals to team groups');
+  // addToGroupIdempotent_('all-members@friendsofportlandnet.org', email);
+  // console.log(`added ${email} to all-members@friendsofportlandnet.org`);
 
   // 2) Team group
   if (!teamGroupEmail) {
     Logger.log(`SKIP team group: cannot resolve for team="${team}" email="${email}"`);
     return;
   }
-  // console.log('skipping add to team group until permissions fixed');
+ 
   addToGroupIdempotent_(teamGroupEmail, email);
   console.log(`added ${email} to ${teamGroupEmail}`);
 }

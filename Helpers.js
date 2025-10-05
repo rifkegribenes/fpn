@@ -8,6 +8,11 @@ function showLinkedFormUrl() {
   Logger.log(url || 'No form assigned to this spreadsheet.');
 }
 
+function logAccess(email, params) {
+  const sheet = LOGSHEET.getSheetByName('Access');
+  sheet.appendRow([new Date(), email, JSON.stringify(params)]);
+}
+
 function formatDate(date) {
   return Utilities.formatDate(date, Session.getScriptTimeZone(), "MMM d, yyyy");
 }
