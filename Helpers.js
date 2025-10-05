@@ -492,3 +492,40 @@ function renderTemplate_(fileName, obj) {
   Object.assign(t, obj);
   return t.evaluate().getContent(); // full HTML string
 }
+
+function deleteFormResponse(responseId) {
+  console.log('deleteFormResponse');
+  try {
+    const form = FormApp.openById('1SE1N04H87kckCEZdiF56Nq9U5IoH5oSxUMGevqK7LFk');
+    console.log(`form: ${form}`);
+    form.deleteResponse(responseId); // Delete the actual form response
+
+    // Open the sheet and get data
+    const sheet = updatesSheet;
+    const data = sheet.getDataRange().getValues();
+
+    if (data.length < 2) return false; // No data beyond header
+
+    // Find the column index where the header is "Id"
+    const headers = data[0];
+    const idColIndex = headers.indexOf('Id');
+    if (idColIndex === -1) {
+      Logger.log('Id column not found in header row.');
+      return false;
+    }
+
+    // Find and delete the row where responseId matches
+    for (let i = 1; i < data.length; i++) {
+      if (data[i][idColIndex] === responseId) {
+        sheet.deleteRow(i + 1); // +1 to skip header
+        console.log(`deleted row ${i +1}`);
+        break;
+      }
+    }
+
+    return true;
+  } catch (err) {
+    Logger.log('Error deleting response: ' + err);
+    return false;
+  }
+}

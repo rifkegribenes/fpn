@@ -2,15 +2,29 @@ const TEAM_LEADS_GROUP_EMAIL = "team-leads@friendsofportlandnet.org";
 const ADMIN_GROUP_EMAIL = "adminteam@friendsofportlandnet.org"; 
 // console.log(`ss: ${ss}`);
 
+let isAdmin, isTeamLead, isTeamPageEditor;
+
 function testGroupCheck() {
   const user = "admin@friendsofportlandnet.org";
   Logger.log(checkGroupMembership(user));
 }
 
 function doGet(e) {
-
+  console.log('doGet');
   const userEmail = Session.getActiveUser().getEmail();
   logAccess(userEmail, e.parameter);
+
+  const action = e.parameter.action;
+  const responseId = e.parameter.id;
+  console.log(`action: ${action}, responseId: ${responseId}`);
+  // Handle delete
+  if (action === 'delete' && !!responseId) {
+    console.log('trying to delete');
+    const deleted = deleteFormResponse(responseId);
+    return HtmlService.createHtmlOutput(
+      deleted ? 'Response deleted successfully.' : 'Failed to delete response.'
+    );
+  }
   
   const page = e.parameter.page || 'team'; // default to 'team' page if none given
 
@@ -52,16 +66,16 @@ function getTeamData(teamParam) {
 function renderContent(userTeam, userEmail) {
   console.log('renderContent');
   console.log(`userTeam: ${userTeam}, userEmail: ${userEmail}`);
-  const isAdmin = checkGroupMembership(ADMIN_GROUP_EMAIL, userEmail);
-  const isTeamLead = checkGroupMembership(TEAM_LEADS_GROUP_EMAIL, userEmail);
-  const isTeamPageEditor = (isTeamLead && userEmail.includes(shortNameLookup(userTeam))) || isAdmin;
+  isAdmin = checkGroupMembership(ADMIN_GROUP_EMAIL, userEmail);
+  isTeamLead = checkGroupMembership(TEAM_LEADS_GROUP_EMAIL, userEmail);
+  isTeamPageEditor = (isTeamLead && userEmail.includes(shortNameLookup(userTeam))) || isAdmin;
   console.log(`isAdmin: ${isAdmin}, isTeamLead: ${isTeamLead}, isTeamPageEditor: ${isTeamPageEditor}`);
 
   let content = `
     <div style="padding: 20px; font-family: Lato, sans-serif;">
       ${showLogs(userEmail, userTeam, isAdmin, isTeamLead, isTeamPageEditor)}
       ${isTeamPageEditor ? showTeamPageEditorContent(userTeam) : ''}
-      ${showPublicContent(userTeam)}
+      ${showPublicContent(userTeam, isTeamPageEditor)}
     </div>
   `;
 
@@ -91,7 +105,7 @@ function checkGroupMembership(groupEmail, userEmail) {
   }
 }
 
-function showPublicContent(userTeam) {
+function showPublicContent(userTeam, isTeamPageEditor) {
   console.log('showPublicContent');
   return `
     <div class="publicContent">
@@ -100,7 +114,7 @@ function showPublicContent(userTeam) {
         <div class="announcements block" style="max-width: 400px;">
           <h3 class="blockhead">Announcements</h3>
           <div class="announcements cont" style="padding-right: 20px; margin-right: 20px; border-right: 1px dotted #ccc;">
-            ${announcementsBlock(userTeam)}
+            ${announcementsBlock(userTeam, isTeamPageEditor)}
           </div>
         </div>
         <div class="calendar block" style="max-width: 400px;">
@@ -159,19 +173,21 @@ function showTeamPageEditorContent(team) {
       </div>`
 }
 
-function announcementsBlock(team) {
+function announcementsBlock(team, isTeamPageEditor) {
   if (getRecentAnnouncements(team) && getRecentAnnouncements(team).length) {
-    return getRecentAnnouncements(team).map(item => renderAnnouncement(item)).join('');
+    return getRecentAnnouncements(team).map(item => renderAnnouncement(item, isTeamPageEditor)).join('');
   } else {
     return `<p>No announcements for ${team}</p>`
   }
   
 }
 
-function renderAnnouncement(obj) {
+function renderAnnouncement(obj, isTeamPageEditor) {
+  const adminBlock = isTeamPageEditor ? `<a href="${obj.editURL}">Edit</a> | <a href="${obj.deleteURL}">Delete</a>` : '';
   return `<div class="announcement">
     <h4 class="aTitle" style="margin-bottom: 10px;">${obj.title}&#160;&#160;&#x7C;&#160;&#160;<span class="aDate" style="color:#333;font-weight:400;">${formatDate(obj.timestamp)}</span></h4>
     <p class="aBody">${obj.body}</p>
+    ${adminBlock}
   </div>`
 }
 
@@ -197,8 +213,10 @@ function getRecentAnnouncements(team = 'Test2') {
   const TITLE_COL = headers.indexOf('Announcement Title');
   const BODY_COL = headers.indexOf('Announcement Body');
   const TEAM_COL = headers.indexOf('Your Team');
+  const EDIT_URL_COL = headers.indexOf('Edit URL');
+  const DELETE_URL_COL = headers.indexOf('Delete URL');
 
-  if (TIMESTAMP_COL === -1 || UPDATE_TYPE_COL === -1 || TITLE_COL === -1 || BODY_COL === -1 || TEAM_COL === -1) {
+  if (TIMESTAMP_COL === -1 || UPDATE_TYPE_COL === -1 || TITLE_COL === -1 || BODY_COL === -1 || TEAM_COL === -1, EDIT_URL_COL === -1, DELETE_URL_COL === -1) {
     throw new Error("Required columns are missing from the sheet.");
   }
 
@@ -217,7 +235,9 @@ function getRecentAnnouncements(team = 'Test2') {
     return {
       timestamp: new Date(row[TIMESTAMP_COL]),
       title: row[TITLE_COL],
-      body: row[BODY_COL]
+      body: row[BODY_COL],
+      editURL: row[EDIT_URL_COL],
+      deleteURL: row[DELETE_URL_COL]
     };
   });
   // console.log(recentAnnouncements);
@@ -245,13 +265,13 @@ function renameFile(team, file, fileType, meetingDate) {
     } else {
       newName = `${team}_${fileType}_${originalName}`;
     }
-    console.log(`originalName: ${originalName}`);
-    console.log(`newName: ${newName}`);
+    // console.log(`originalName: ${originalName}`);
+    // console.log(`newName: ${newName}`);
     file.setName(newName);
     file.setDescription(team);
-    console.log(`file description: *********************`);
-    console.log(file.getDescription());
-    console.log(`mtgDate: ${mtgDate}`);
+    // console.log(`file description: *********************`);
+    // console.log(file.getDescription());
+    // console.log(`mtgDate: ${mtgDate}`);
     if (mtgDate) {
       let currentDesc = file.getDescription() || "";
       currentDesc = currentDesc += `,${mtgDate}`;
@@ -271,12 +291,7 @@ function onFormSubmitHandler2(e) {
   const sheetName = e.range.getSheet().getName();
   console.log(`sheetName = ${sheetName}`);
 
-  // Only run if the response is from the specific form tab
-  if (sheetName !== "TeamPageUpdateForm") {
-    return; // Exit early for other forms
-  }
-
-  // Proceed with your file upload logic
+  // File upload logic
   const responses = e.namedValues;
   const team = responses["Your Team"][0]; 
   const fileType = responses["What do you want to update?"][0].includes('minutes') ? 'minutes' : responses["What do you want to update?"][0].includes('operations') ? 'ops' : '';
@@ -327,7 +342,7 @@ function renderMinutesBlock(team = 'Test2') {
 
       let formattedDate = 'Unknown date';
       let mtgDateParsed;
-      console.log(`file.getDescription() ********************: ${file.getDescription()}`);
+      // console.log(`file.getDescription() ********************: ${file.getDescription()}`);
       if (file.getDescription()) {
         mtgDateParsed = file.getDescription().split(",")[1] || null;
         // console.log(`mtgDateParsed: ${mtgDateParsed}`);
@@ -390,7 +405,7 @@ function getLatestMinutesFiles(team, folderId, maxFiles) {
   const teamPrefix = `${team}_minutes`;
   // console.log(`teamPrefix: ${teamPrefix}`);
   const response = Drive.Files.list({
-    q: `'${folderId}' in parents and mimeType='application/pdf' and trashed=false and name contains '${teamPrefix}'`,
+    q: `'${folderId}' in parents and and (mimeType='application/pdf' or mimeType='application/vnd.openxmlformats-officedocument.wordprocessingml.document' or mimeType='application/msword') and trashed=false and name contains '${teamPrefix}'`,
     orderBy: 'createdTime desc',
     maxResults: maxFiles,
     fields: 'files(id,name,createdTime,description)'
@@ -404,7 +419,7 @@ function getLatestOpsFile(team, folderId) {
   const teamPrefix = `${team}_ops`;
   // console.log(`teamPrefix: ${teamPrefix}`);
   const response = Drive.Files.list({
-    q: `'${folderId}' in parents and mimeType='application/pdf' and trashed=false and name contains '${teamPrefix}'`,
+    q: `'${folderId}' in parents and and (mimeType='application/pdf' or mimeType='application/vnd.openxmlformats-officedocument.wordprocessingml.document' or mimeType='application/msword') and trashed=false and name contains '${teamPrefix}'`,
     orderBy: 'createdTime desc',
     maxResults: 10, // get a few in case of false positives
     fields: 'files(id,name,createdTime,description)'

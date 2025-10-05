@@ -25,7 +25,8 @@
     "https://www.googleapis.com/auth/documents",
     "https://mail.google.com/",
     "https://www.googleapis.com/auth/script.external_request",
-    "https://www.googleapis.com/auth/script.scriptapp"
+    "https://www.googleapis.com/auth/script.scriptapp",
+    "https://www.googleapis.com/auth/forms"
   ],
   "runtimeVersion": "V8",
   "webapp": {

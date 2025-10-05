@@ -45,18 +45,13 @@
 
     <script>
 
-      // Insert logo image after page load but only if not in iframe
+      // Insert logo image after page load
       document.addEventListener("DOMContentLoaded", function() {
-        const isInIframe = window.self !== window.top;
         const base64ImageWithQuotes = <?= JSON.stringify(headerImage) ?>;
         const base64Image = base64ImageWithQuotes.replace(/^"+|"+$/g, '');
         document.getElementById("logo").src = base64Image;
         const image = document.getElementById("logo");
-        if (!isInIframe) {
-          image.style.display = "block";
-        } else {
-          image.style.display = "none";
-        }
+        image.style.display = "block";
       });
 
       const teamWithQuotes = <?= JSON.stringify(team) ?>;
