@@ -50,7 +50,7 @@
       <p style="text-align: center;">Loading team info...</p>
     </div>
     <? if (message) { ?>
-      <div class="alert success">
+      <div class="alert success" id="successMessage">
         <?= message ?>
       </div>
     <? } ?>
@@ -77,6 +77,16 @@
         container.innerHTML = content;
         container.style.display = 'block';
       }).getTeamData(team);
+
+      // Hide success message after 5 seconds
+      document.addEventListener("DOMContentLoaded", function() {
+        const msgEl = document.getElementById("successMessage");
+        if (msgEl) {
+          setTimeout(() => {
+            msgEl.style.display = "none";
+          }, 5000); // 5,000 ms = 5 seconds
+        }
+      });
     </script>
 
 

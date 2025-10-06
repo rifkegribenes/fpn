@@ -172,16 +172,18 @@ function showTeamPageEditorContent(team) {
 }
 
 function announcementsBlock(team, isTeamPageEditor) {
+  const teamShortName = shortNameLookup(team);
   if (getRecentAnnouncements(team) && getRecentAnnouncements(team).length) {
-    return getRecentAnnouncements(team).map(item => renderAnnouncement(item, isTeamPageEditor)).join('');
+    return getRecentAnnouncements(team).map(item => renderAnnouncement(item, isTeamPageEditor, teamShortName)).join('');
   } else {
     return `<p>No announcements for ${team}</p>`
   }
   
 }
 
-function renderAnnouncement(obj, isTeamPageEditor) {
-  const adminBlock = isTeamPageEditor ? `<a href="${obj.editURL}">Edit</a> | <a href="${obj.deleteURL}">Delete</a>` : '';
+function renderAnnouncement(obj, isTeamPageEditor, teamShortName) {
+  const deleteURLWithParams = `${obj.deleteURL}&page=team&team=${teamShortName}`
+  const adminBlock = isTeamPageEditor ? `<a href="${obj.editURL}">Edit</a> | <a href="${deleteURLWithParams}">Delete</a>` : '';
   return `<div class="announcement">
     <h4 class="aTitle" style="margin-bottom: 10px;">${obj.title}&#160;&#160;&#x7C;&#160;&#160;<span class="aDate" style="color:#333;font-weight:400;">${formatDate(obj.timestamp)}</span></h4>
     <p class="aBody">${obj.body}</p>
