@@ -14,11 +14,23 @@ function logAccess(email, params) {
 }
 
 function formatDate(date) {
-  return Utilities.formatDate(date, Session.getScriptTimeZone(), "MMM d, yyyy");
+  const normalizedDate = normalizeSheetDate(date);
+  return Utilities.formatDate(normalizedDate, Session.getScriptTimeZone(), "MMM d, yyyy");
 }
 
 function formatDateFileName(date) {
-  return Utilities.formatDate(date, Session.getScriptTimeZone(), "yyyy-MM-dd");
+  const normalizedDate = normalizeSheetDate(date);
+  return Utilities.formatDate(normalizedDate, Session.getScriptTimeZone(), "yyyy-MM-dd");
+}
+
+function normalizeSheetDate(sheetDate) {
+  const timeZone = Session.getScriptTimeZone();  // e.g., "America/Los_Angeles"
+  const year = Utilities.formatDate(sheetDate, timeZone, 'yyyy');
+  const month = Utilities.formatDate(sheetDate, timeZone, 'MM');
+  const day = Utilities.formatDate(sheetDate, timeZone, 'dd');
+
+  // Create a new Date using local time
+  return new Date(Number(year), Number(month) - 1, Number(day));
 }
 
 
@@ -276,6 +288,8 @@ function teamLookup(neighborhood) {
       const gIdx = locHeaders.indexOf('Team Group Email');
       const tpIdx = locHeaders.indexOf('Team page');
       const cIdxL = locHeaders.indexOf('Team calendar link');
+      const tleIdxL = locHeaders.indexOf('Team Lead email');
+      const tlaIdxL = tleIdxL + 1 // assume this column is to the right of TL Email; col header is too long and may be changed
 
       // if those field headers don't exist, the function doesn't work; throw error
       if (tIdxL === -1 || gIdx === -1 || nIdxL === -1, tpIdx === -1) {
@@ -289,53 +303,68 @@ function teamLookup(neighborhood) {
       // loop through the rows in the location lookup sheet
       // in each row, check to see if the neighborhood value passed to this function
       // matches the neighborhood value in that row
-      for (let r of locRows) {
+
+      let teamLeadEmail;
+      locRows.forEach((r, i) => {
         if (String(r[nIdxL]).trim() === neighborhood) {
 
-          // if we find a match, gather the group email, team name, calendar link, and team page URL from that row
+          // if we find a match on neighborhood, gather the group email, team name, calendar link, and team page URL from that row
           const group = String(r[gIdx] || '').trim();
           const team = String(r[tIdxL] || '').trim();
           const teamPageURL = String(r[tpIdx] || '').trim();
           const teamCalendar = String(r[cIdxL] || '').trim();
+          // check if the 'team lead email assigned' column = TRUE
+          // if so, return the teamLeadEmail; otherwise return null
+          console.log(`is the ${team} team email assigned?: row ${i} says ${r[tlaIdxL]}`)
+          teamLeadEmail = !!r[tlaIdxL] ?  String(r[tleIdxL]) : null;
+          console.log(`teamLeadEmail: ${teamLeadEmail}`);
 
           // store those values in the return object
           returnObj.group = group;
           returnObj.team = team;
           returnObj.teamPageURL = teamPageURL;
           returnObj.teamCalendar = teamCalendar;
+          returnObj.teamLeadEmail = teamLeadEmail;
         }
-      }
+      });
+      // if the team lead email has not been assigned, skip this next section
+      // but if it is assigned, find the name(s) of the team leads
 
-      // identify the indices (position in the row array) for each of the field names we care about in the members master sheet
-      const tIdxM = mbrHeaders.indexOf('Team');
-      const rIdxM = mbrHeaders.indexOf('Role');
-      const fIdxM = mbrHeaders.indexOf('First Name');
-      const lIdxM = mbrHeaders.indexOf('Last Name');
-      const eIdxM = mbrHeaders.indexOf('Email');
-      // console.log(`looking for team leads for ${returnObj.team}`);
+      if (returnObj.teamLeadEmail) {
+        console.log(`team lead email for ${returnObj.team} is assigned; looking for TL names`);
+        // identify the indices (position in the row array) for each of the field names we care about in the members master sheet
+        const tIdxM = mbrHeaders.indexOf('Team');
+        const rIdxM = mbrHeaders.indexOf('Role');
+        const fIdxM = mbrHeaders.indexOf('First Name');
+        const lIdxM = mbrHeaders.indexOf('Last Name');
 
-      // loop through the rows in the members master sheet
-      // in each row, check to see if the team value we got from the lookup sheet
-      // matches the team value in that row, AND the person is a 'Team Leader'
-      for (let r of mbrRows ) {
-        // look for team leads for the member's team
-        if (String(r[tIdxM]).trim() === returnObj.team && (String(r[rIdxM]).trim().includes( 'Team Leader') || String(r[rIdxM]).trim().includes( 'Team leader'))) {
+        // loop through the rows in the members master sheet
+        // in each row, check to see if the team value we got from the lookup sheet
+        // matches the team value in that row, AND the person is a 'Team Leader'
+        mbrRows.forEach((r, i) => {
+          // look for team leads for the member's team
+          console.log(`row ${i} role: ${r[rIdxM]}, team: ${r[tIdxM]}`);
+          if (String(r[tIdxM]).trim() === returnObj.team && (String(r[rIdxM]).trim().includes( 'Leader') || String(r[rIdxM]).trim().includes( 'leader'))) {
+            console.log(`found team lead: row ${i} role: ${r[rIdxM]}`)
+            // if we find a match, gather the team lead name from that row
+            const teamLeadName = `${String(r[fIdxM]).trim()} ${String(r[lIdxM]).trim()}` || '';
+            console.log(`team lead of ${returnObj.team} team is ${teamLeadName}`);
 
-          // if we find a match, gather the team lead name and team lead email from that row
-          // TODO -- only collect this value if the teamLeadEmail field is populated --
-          // set some other fallback if there is only a personal email
-          const teamLeadName = `${String(r[fIdxM]).trim()} ${String(r[lIdxM]).trim()}` || '';
-          const teamLeadEmail = String(r[eIdxM] || '').trim();
-          // console.log(`team lead of ${returnObj.team} team is ${teamLeadName}`);
+            // store these values in an object and store the object as one record in the teamLeadsArray
+            // then continue looping through to see if there are other team leads for this team
 
-          // store these values in an object and store the object as one record in the teamLeadsArray
-          // then continue looping through to see if there are other team leads for this team
-          leadsArray.push({
-            teamLeadName,
-            teamLeadEmail
-          });
-        }
-      }
+            // only store the name if the team lead email has been assigned 
+            // (eg the team lead has been onboarded to FPN workspace)
+
+            if (!!teamLeadEmail) {
+              leadsArray.push({
+                teamLeadName,
+                teamLeadEmail
+              });
+            }
+          } // if found match
+        }) // forEach
+      } // if team lead email
 
       // if there are no team leads for this team, the array will be empty
       if (!leadsArray.length) {

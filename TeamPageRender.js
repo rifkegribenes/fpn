@@ -12,7 +12,7 @@ function testGroupCheck() {
 function doGet(e) {
   console.log('doGet');
   const userEmail = Session.getActiveUser().getEmail();
-  logAccess(userEmail, e.parameter);
+  // logAccess(userEmail, e.parameter);
 
   const action = e.parameter.action;
   const responseId = e.parameter.id;
@@ -291,6 +291,14 @@ function onFormSubmitHandler2(e) {
   const sheetName = e.range.getSheet().getName();
   console.log(`sheetName = ${sheetName}`);
 
+  // e.source is the Form object that triggered the event
+  const submittedFormId = e.source.getId();
+
+  if (submittedFormId !== UPDATES_FORM_ID) {
+    console.log('Submission ignored: Not from team updates form.');
+    return;
+  }
+
   // File upload logic
   const responses = e.namedValues;
   const team = responses["Your Team"][0]; 
@@ -334,7 +342,7 @@ function renderMinutesBlock(team = 'Test2') {
     const files = getLatestMinutesFiles(team, folderId, 10); //change to allow more files
 
     if (!!files && files.length) {
-      let html = `<div style="font-family: Lato, sans-serif; font-size: 14px;"><ul>`;
+      let html = `<div style="font-family: Lato, sans-serif; font-size: 14px;"><ul style="padding-inline-start: 0px">`;
 
       files.forEach(file => {
       // Try to get createdTime or fallback to createdDate or null
@@ -405,7 +413,7 @@ function getLatestMinutesFiles(team, folderId, maxFiles) {
   const teamPrefix = `${team}_minutes`;
   // console.log(`teamPrefix: ${teamPrefix}`);
   const response = Drive.Files.list({
-    q: `'${folderId}' in parents and and (mimeType='application/pdf' or mimeType='application/vnd.openxmlformats-officedocument.wordprocessingml.document' or mimeType='application/msword') and trashed=false and name contains '${teamPrefix}'`,
+    q: `'${folderId}' in parents and (mimeType='application/pdf' or mimeType='application/vnd.openxmlformats-officedocument.wordprocessingml.document' or mimeType='application/msword') and trashed=false and name contains '${teamPrefix}'`,
     orderBy: 'createdTime desc',
     maxResults: maxFiles,
     fields: 'files(id,name,createdTime,description)'
@@ -419,7 +427,7 @@ function getLatestOpsFile(team, folderId) {
   const teamPrefix = `${team}_ops`;
   // console.log(`teamPrefix: ${teamPrefix}`);
   const response = Drive.Files.list({
-    q: `'${folderId}' in parents and and (mimeType='application/pdf' or mimeType='application/vnd.openxmlformats-officedocument.wordprocessingml.document' or mimeType='application/msword') and trashed=false and name contains '${teamPrefix}'`,
+    q: `'${folderId}' in parents and (mimeType='application/pdf' or mimeType='application/vnd.openxmlformats-officedocument.wordprocessingml.document' or mimeType='application/msword') and trashed=false and name contains '${teamPrefix}'`,
     orderBy: 'createdTime desc',
     maxResults: 10, // get a few in case of false positives
     fields: 'files(id,name,createdTime,description)'

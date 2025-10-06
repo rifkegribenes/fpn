@@ -35,7 +35,6 @@ function processNewNET(row, ss, sh) {
   // step 1: copy values from the selected row in formResponses into the membersMaster sheet, matching on column headers
   // first function parameter = source sheet, second parameter = target sheet
 
-  // TODO: look up email first, and update if matching row found
   copyRowToAnotherSheet(sh, ss.getSheetByName('MasterMembers'));
 
   // step 2: trigger onboarding emails
@@ -86,7 +85,7 @@ function processNewNET(row, ss, sh) {
   
 }
 
-/** Add person to All‑Member + Team group (idempotent) */
+/** Add new NET to appropriate Team group (idempotent) */
 function addToGoogleGroups(row, ss, sh) {
   console.log('addToGoogleGroups')
   const rowData = sh.getRange(row, 1, 1, sh.getLastColumn()).getValues()[0];
