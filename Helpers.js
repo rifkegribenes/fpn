@@ -331,7 +331,7 @@ function teamLookup(neighborhood) {
       // but if it is assigned, find the name(s) of the team leads
 
       if (returnObj.teamLeadEmail) {
-        console.log(`team lead email for ${returnObj.team} is assigned; looking for TL names`);
+        // console.log(`team lead email for ${returnObj.team} is assigned; looking for TL names`);
         // identify the indices (position in the row array) for each of the field names we care about in the members master sheet
         const tIdxM = mbrHeaders.indexOf('Team');
         const rIdxM = mbrHeaders.indexOf('Role');
@@ -343,9 +343,9 @@ function teamLookup(neighborhood) {
         // matches the team value in that row, AND the person is a 'Team Leader'
         mbrRows.forEach((r, i) => {
           // look for team leads for the member's team
-          console.log(`row ${i} role: ${r[rIdxM]}, team: ${r[tIdxM]}`);
+          // console.log(`row ${i} role: ${r[rIdxM]}, team: ${r[tIdxM]}`);
           if (String(r[tIdxM]).trim() === returnObj.team && (String(r[rIdxM]).trim().includes( 'Leader') || String(r[rIdxM]).trim().includes( 'leader'))) {
-            console.log(`found team lead: row ${i} role: ${r[rIdxM]}`)
+            // console.log(`found team lead: row ${i} role: ${r[rIdxM]}`)
             // if we find a match, gather the team lead name from that row
             const teamLeadName = `${String(r[fIdxM]).trim()} ${String(r[lIdxM]).trim()}` || '';
             console.log(`team lead of ${returnObj.team} team is ${teamLeadName}`);

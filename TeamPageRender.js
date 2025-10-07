@@ -107,42 +107,81 @@ function showPublicContent(userTeam, isTeamPageEditor) {
   console.log('showPublicContent');
   return `
     <div class="publicContent">
-      <h2>${userTeam}</h2>
-      <div class="pcContainer container" style="display:flex !important; flex-direction:row; flex-wrap:wrap;">
-        <div class="announcements block" style="max-width: 400px;">
-          <h3 class="blockhead">Announcements</h3>
-          <div class="announcements cont" style="padding-right: 20px; margin-right: 20px; border-right: 1px dotted #ccc;">
-            ${announcementsBlock(userTeam, isTeamPageEditor)}
-          </div>
-        </div>
-        <div class="calendar block" style="max-width: 400px;">
-          <h3 class="blockhead">Upcoming Events</h3>
-          <div class="calendar cont" style="max-width: 400px; padding-right: 20px; margin-right: 20px; border-right: 1px dotted #ccc;">
-            ${renderCalendar(userTeam)}
-          </div>
-        </div>
-        <div class="pcColumnContainer container" style="display:flex !important; flex-direction:column; flex-wrap:wrap; max-width:200px;">
-          <div class="minutes block" style="padding-bottom: 20px; margin-bottom: 20px; border-bottom: 1px dotted #ccc;">
-            <h3 class="blockhead">Meeting Minutes</h3>
-            <div class="minutes cont" style="">
-              ${renderMinutesBlock(userTeam)}
-            </div>
-          </div>
-          <div class="ops block" style="padding-bottom: 20px; margin-bottom: 20px; border-bottom: 1px dotted #ccc;">
-            <h3 class="blockhead">Operations Plan</h3>
-            <div class="ops cont" style="">
-              ${renderOpsPlanBlock(userTeam)}
-            </div>
-          </div>
-          <div class="grouplink block">
-            <h3 class="blockhead">Google Group</h3>
-            <div class="gGroup cont" style="">
-              ${renderGoogleGroup(userTeam)}
-            </div>
-          </div>
+  <h2 style="font-size: 2rem; margin-bottom: 16px;">${userTeam}</h2>
+
+  <div class="pcContainer container" style="
+    display: flex !important;
+    flex-direction: column !important;  /* force single column */
+    flex-wrap: nowrap !important;
+    width: 100%;
+  ">
+    <div class="announcements block" style="
+      max-width: 100% !important;
+      margin-bottom: 24px;
+    ">
+      <h3 class="blockhead" style="font-size: 1.5rem; margin-bottom: 12px;">Announcements</h3>
+      <div class="announcements cont" style="
+        padding-right: 0 !important;
+        margin-right: 0 !important;
+        border-right: none !important;
+      ">
+        ${announcementsBlock(userTeam, isTeamPageEditor)}
       </div>
     </div>
-  `;
+
+    <div class="calendar block" style="
+      max-width: 100% !important;
+      margin-bottom: 24px;
+    ">
+      <h3 class="blockhead" style="font-size: 1.5rem; margin-bottom: 12px;">Upcoming Events</h3>
+      <div class="calendar cont" style="
+        max-width: 100% !important;
+        padding-right: 0 !important;
+        margin-right: 0 !important;
+        border-right: none !important;
+      ">
+        ${renderCalendar(userTeam)}
+      </div>
+    </div>
+
+    <div class="pcColumnContainer container" style="
+      display: flex !important;
+      flex-direction: column !important;
+      flex-wrap: nowrap !important;
+      max-width: 100% !important;
+    ">
+      <div class="minutes block" style="
+        padding-bottom: 20px;
+        margin-bottom: 20px;
+        border-bottom: 1px dotted #ccc;
+      ">
+        <h3 class="blockhead" style="font-size: 1.5rem; margin-bottom: 12px;">Meeting Minutes</h3>
+        <div class="minutes cont">
+          ${renderMinutesBlock(userTeam)}
+        </div>
+      </div>
+
+      <div class="ops block" style="
+        padding-bottom: 20px;
+        margin-bottom: 20px;
+        border-bottom: 1px dotted #ccc;
+      ">
+        <h3 class="blockhead" style="font-size: 1.5rem; margin-bottom: 12px;">Operations Plan</h3>
+        <div class="ops cont">
+          ${renderOpsPlanBlock(userTeam)}
+        </div>
+      </div>
+
+      <div class="grouplink block">
+        <h3 class="blockhead" style="font-size: 1.5rem; margin-bottom: 12px;">Google Group</h3>
+        <div class="gGroup cont">
+          ${renderGoogleGroup(userTeam)}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>`
+
 }
 
 function showTeamPageEditorContent(team) {
@@ -150,7 +189,9 @@ function showTeamPageEditorContent(team) {
     <div class="tlContainer container">
       <h3>
         <a 
+          id="teamUpdateLink"
           href="https://docs.google.com/forms/d/e/1FAIpQLSe9TU8URPswEVELyy9jOImY2_2vJ9OOE7O8L5JlNUuiJzPQYQ/viewform?usp=pp_url&entry.1458714000=${encodeURIComponent(team)}"
+          class="responsiveLink"
           style="
             display: block;
             padding: 10px;
@@ -166,10 +207,11 @@ function showTeamPageEditorContent(team) {
           onmouseout="this.style.backgroundColor='#f1f1f1';"
           target="_blank">
             Update team page
-          </a>
-        </h3>
-      </div>`
+        </a>
+      </h3>
+    </div>`;
 }
+
 
 function announcementsBlock(team, isTeamPageEditor) {
   const teamShortName = shortNameLookup(team);
@@ -193,15 +235,21 @@ function renderAnnouncement(obj, isTeamPageEditor, teamShortName) {
 
 function renderCalendar(team) {
   console.log(`calendarLookup: ${team}`);
-  console.log(calendarLookup(team))
-  if (!!calendarLookup(team)) {
-    return `<iframe style="width: 100%; min-height: 400px; max-width: 400px;" src="${calendarLookup(team)}">
-    </iframe>`
-  } else {
-    return `<p>No calendar available for ${team}</p>`
-  }
+  console.log(calendarLookup(team));
   
+  if (!!calendarLookup(team)) {
+    return `<iframe 
+              style="width: 100%; min-height: 400px; border: none;" 
+              src="${calendarLookup(team)}"
+              loading="lazy"
+              allowfullscreen
+            ></iframe>`;
+  } else {
+    return `<p>No calendar available for ${team}</p>`;
+  }
 }
+
+
 
 function getRecentAnnouncements(team = 'Test2') {
   const data = updatesSheet.getDataRange().getValues();
@@ -336,50 +384,50 @@ function onFormSubmitHandler2(e) {
 }
 
 
-function renderMinutesBlock(team = 'Test2') {
+function renderMinutesBlock(team) {
   try {
     const folderId = MINUTES_FOLDER_ID; 
-    const files = getLatestMinutesFiles(team, folderId, 10); //change to allow more files
+    const files = getLatestMinutesFiles(team, folderId, 10);
 
     if (!!files && files.length) {
-      let html = `<div style="font-family: Lato, sans-serif; font-size: 14px;"><ul style="padding-inline-start: 0px">`;
+      let html = `<div class="minutes-block" style="font-family: Lato, sans-serif; font-size: 14px;">`;
 
       files.forEach(file => {
-      // Try to get createdTime or fallback to createdDate or null
-      const createdDateStr = file.createdTime || null;
+        // Your existing date formatting code here...
 
-      let formattedDate = 'Unknown date';
-      let mtgDateParsed;
-      // console.log(`file.getDescription() ********************: ${file.getDescription()}`);
-      if (file.getDescription()) {
-        mtgDateParsed = file.getDescription().split(",")[1] || null;
-        // console.log(`mtgDateParsed: ${mtgDateParsed}`);
-      }
-      if (mtgDateParsed) {
-        // console.log(`mtgDateParsed: ${mtgDateParsed}`);
-        formattedDate = formatDate(new Date(mtgDateParsed));
-      } else if (createdDateStr) {
-        const createdDate = new Date(createdDateStr);
-        formattedDate = Utilities.formatDate(createdDate, Session.getScriptTimeZone(), "MMM d, yyyy");
-      }
+        const createdDateStr = file.createdTime || null;
+        let formattedDate = 'Unknown date';
+        let mtgDateParsed;
 
-      const linkText = `${team} minutes ${formattedDate}`;
+        if (file.getDescription()) {
+          mtgDateParsed = file.getDescription().split(",")[1] || null;
+        }
+        if (mtgDateParsed) {
+          formattedDate = formatDate(new Date(mtgDateParsed));
+        } else if (createdDateStr) {
+          const createdDate = new Date(createdDateStr);
+          formattedDate = Utilities.formatDate(createdDate, Session.getScriptTimeZone(), "MMM d, yyyy");
+        }
 
-      const url = `https://drive.google.com/file/d/${file.id}/view`;
-      html += `<li style="margin-bottom: 10px; list-style-type: none;"><a href="${url}" target="_blank">${linkText}</a></li>`;
-    });
-    html += `</ul></div>`
-    console.log(html);
-    return html;
+        const linkText = `${team} minutes ${formattedDate}`;
+        const url = `https://drive.google.com/file/d/${file.id}/view`;
+
+        html += `<p style="margin-bottom: 15px;">
+          <a href="${url}" target="_blank">${linkText}</a>
+        </p>`;
+      });
+
+      html += `</ul></div>`;
+      return html;
     } else {
-      return `<p>No meeting minutes available for ${team}</p>`
+      return `<p>No meeting minutes available for ${team}</p>`;
     }
-
-    
   } catch (e) {
     return `<p>Error: ${e.message}</p><p>No meeting minutes available for ${team}</p>`;
   }
 }
+
+
 
 function renderOpsPlanBlock(team) {
   try {
@@ -398,7 +446,7 @@ function renderOpsPlanBlock(team) {
       }
       const linkText = `${team} Operations Plan`;
       const url = `https://drive.google.com/file/d/${file.id}/view`;
-      html += `<p style="margin-bottom: 10px; list-style-type: none;"><a href="${url}" target="_blank">${linkText}</a> (${formattedDate})</p></div>`;
+      html += `<p style="margin-bottom: 10px;"><a href="${url}" target="_blank">${linkText}</a> (${formattedDate})</p></div>`;
       return html;
     } else {
       return `<p>No operations plan available for ${team}</p>`;
@@ -441,7 +489,7 @@ function getLatestOpsFile(team, folderId) {
 
 function renderGoogleGroup(team) {
   const groupAddress = `https://groups.google.com/a/friendsofportlandnet.org/g/${shortNameLookup(team)}`;
-  return `<a href=${groupAddress}>${team} Google Group</a>`
+  return `<p><a href=${groupAddress}>${team} Google Group</a></p>`
 }
 
 function getTeamLinks() {
