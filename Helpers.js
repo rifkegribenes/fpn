@@ -3,6 +3,47 @@ function authorizeOnce() {
   DriveApp.getRootFolder();
 }
 
+function logSheetIds() {
+  const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+  const sheets = spreadsheet.getSheets();
+  
+  sheets.forEach(sheet => {
+    Logger.log(`Name: ${sheet.getName()} | ID: ${sheet.getSheetId()}`);
+  });
+}
+
+const SheetCache = (() => {
+  let idToSheetMap = null;
+
+  function buildCache() {
+    const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+    const sheets = spreadsheet.getSheets();
+    idToSheetMap = {};
+    sheets.forEach(sheet => {
+      idToSheetMap[sheet.getSheetId()] = sheet;
+    });
+  }
+
+  return {
+    getSheetById: function(sheetId) {
+      if (!idToSheetMap) {
+        buildCache();
+      }
+
+      const sheet = idToSheetMap[sheetId];
+      if (!sheet) {
+        throw new Error(`No sheet found with ID ${sheetId}`);
+      }
+      return sheet;
+    },
+
+    // Optional: Reset cache manually if needed
+    clearCache: function() {
+      idToSheetMap = null;
+    }
+  };
+})();
+
 function showLinkedFormUrl() {
   const url = ss.getFormUrl(); // null if no assigned form
   Logger.log(url || 'No form assigned to this spreadsheet.');
@@ -123,6 +164,90 @@ function shortNameLookup(team = 'Test2', ss) {
       // if we find a match, find the short name link in this row
       const shortName = String(r[sIdxL] || '').trim();
       return shortName;
+    }
+  }
+}
+
+/** takes a team name OR short name as input,
+   * returns an object containing all other fields in the lookup sheet as output
+   * 
+   * */
+function globalLookup(team = 'woodstock') {
+  console.log('globalLookup');
+  console.log(`team: ${team}`);
+
+  // if there's no team input, the function doesn't run
+    if (!team) {
+      console.log('no team provided');
+      return null;
+    }
+
+  // find header and rows in team lookup sheet
+  const tmHeaders = [ ...readSheet_(teamSheet).headers ];
+  const tmRows = [ ...readSheet_(teamSheet).rows ];
+
+  // identify the indices (position in the row array) for each of the field names we care about in the team lookup sheet
+  const sIdx = tmHeaders.indexOf('Short name');
+  const tIdx = tmHeaders.indexOf('Team');
+  const eIdx = tmHeaders.indexOf('Team Group Email');
+  const pIdx = tmHeaders.indexOf('Team page');
+  const dIdx = tmHeaders.indexOf('District');
+  const lIdx = tmHeaders.indexOf('Team Lead email');
+  const aIdx = tmHeaders.indexOf('Assigned to (name)');
+  const aeIdx = tmHeaders.indexOf('Alt email');
+  const cIdx = tmHeaders.indexOf('Team calendar link');
+
+  // if those field headers don't exist, the function doesn't work; throw error
+  const indices = {
+    sIdx,
+    tIdx,
+    eIdx,
+    pIdx,
+    dIdx,
+    lIdx,
+    aIdx,
+    aeIdx,
+    cIdx
+  };
+
+  if (Object.values(indices).some(value => value === -1)) {
+    throw new Error("TeamLookup sheet is missing required headers");
+  }
+
+  // for (const [name, value] of Object.entries(indices)) {
+  //   console.log(`${name}: ${value}`);
+  // }
+
+  // loop through the rows in the location lookup sheet
+  // in each row, check to see if the team value sent to the function matches the team in that row,
+  // in EITHER the short name or team columns
+  for (let r of tmRows ) {
+    // check for team match
+    // console.log(String(r[tIdxL]).trim().toLowerCase(), team.trim().toLowerCase());
+    if (String(r[tIdx]).trim().toLowerCase() === team.trim().toLowerCase() ||
+      String(r[sIdx]).trim().toLowerCase() === team.trim().toLowerCase()  ) {
+
+      // if we find a match, save the rest of the values to an object and return the object
+      const shortName = String(r[sIdx] || '').trim();
+      const teamName = String(r[tIdx] || '').trim();
+      const groupEmail = String(r[eIdx] || '').trim();
+      const teamPage = String(r[pIdx] || '').trim();
+      const district = String(r[dIdx] || '').trim();
+      const tlEmail = String(r[lIdx] || '').trim();
+      const tlAssigned = !!r[aIdx] && !!r[aeIdx]; // team lead is assigned if values in these two columns are not blank
+      const teamCal = String(r[cIdx] || '').trim();
+      const teamObj = {
+        shortName,
+        teamName,
+        groupEmail,
+        teamPage,
+        district,
+        tlEmail,
+        tlAssigned,
+        teamCal
+      };
+      console.log(teamObj);
+      return teamObj;
     }
   }
 }

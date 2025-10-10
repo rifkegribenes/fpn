@@ -103,9 +103,9 @@ function addToGoogleGroups(row, ss, sh) {
   }
 
   // 1) All‑Member group
-  console.log('skipping add to all-members; only adding individuals to team groups');
-  // addToGroupIdempotent_('all-members@friendsofportlandnet.org', email);
-  // console.log(`added ${email} to all-members@friendsofportlandnet.org`);
+  // console.log('skipping add to all-members; only adding individuals to team groups');
+  addToGroupIdempotent_('all-members@friendsofportlandnet.org', email);
+  console.log(`added ${email} to all-members@friendsofportlandnet.org`);
 
   // 2) Team group
   if (!teamGroupEmail) {
