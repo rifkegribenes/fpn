@@ -61,41 +61,48 @@ function processNewNET(row, ss, sh) {
 
   // declare variables (blank for now)
   let teamName = '';
-  let leadsArray = [];
+  let teamLeadName = '';
+  let teamLeadEmail = '';
   let teamPageURL = '';
-
+  console.log('66');
+  const teamObj = teamLookup(neighborhood, ss);
+  console.log('68');
+  console.log(teamObj);
+  
   // use neighborhood value to lookup other values in the lookup sheet (team name, team page URL)
   if (neighborhood) {
-   teamName = (teamLookup(neighborhood, ss)['team'] || '').trim();
-   leadsArray = teamLookup(neighborhood, ss)['leadsArray'] || [];
-   teamPageURL = (teamLookup(neighborhood, ss)['teamPageURL'] || '').trim();
+   teamName = (teamObj.team || '').trim();
+   teamLeadName = (teamObj.teamLeadName || '').trim();
+   teamLeadEmail = (teamObj.teamLeadEmail || '').trim();
+   teamPageURL = (teamObj.teamPageURL || '').trim();
   }
-  
 
+  console.log(`teamName: ${teamName}, teamLeadName: ${teamLeadName}, teamLeadEmail: ${teamLeadEmail}, teamPageURL: ${teamPageURL}`);
 
   // choose which template to send (team lead or regular member onboarding)
   if (role === 'Team leader') {
-    sendEmail('teamLeadOnboardEmail', memberName, memberEmail, teamName, leadsArray, teamPageURL);
+    sendEmail('teamLeadOnboardEmail', memberName, memberEmail, teamName, teamPageURL, teamLeadName, teamLeadEmail);
   } else {
-    sendEmail('memberOnboardEmail', memberName, memberEmail, teamName, leadsArray, teamPageURL);
+    sendEmail('memberOnboardEmail', memberName, memberEmail, teamName, teamPageURL, teamLeadName, teamLeadEmail);
   }
 
+  console.log('83');
+
   // step 3: add member to appropriate google groups based on team
-  addToGoogleGroups(row, ss, sh);
+  addToGoogleGroups(teamObj, row, ss, sh);
   
 }
 
 /** Add new NET to appropriate Team group (idempotent) */
-function addToGoogleGroups(row, ss, sh) {
+function addToGoogleGroups(teamObj, row, ss, sh) {
   console.log('addToGoogleGroups')
   const rowData = sh.getRange(row, 1, 1, sh.getLastColumn()).getValues()[0];
   const { headers } = readSheet_(ss.getSheetByName('WorkspaceRegForm'));
   const nIdx = headers.indexOf('Neighborhood');
   const eIdx = headers.indexOf('Email');
   const email = (rowData[eIdx] || '').trim();
-  const neighborhood = (rowData[nIdx] || '').trim();
-  const team = teamLookup(neighborhood, ss)['team'];
-  const teamGroupEmail = teamLookup(neighborhood, ss)['group'];
+  const team = teamObj.team;
+  const teamGroupEmail = teamObj.group;
 
   if (!email || !/@/.test(email)) {
     Logger.log(`SKIP: invalid/missing email. Row: ${JSON.stringify(row)}`);
@@ -118,19 +125,17 @@ function addToGoogleGroups(row, ss, sh) {
 }
 
 /** send member onboarding email template */
-function sendEmail(templateName, memberName, memberEmail, teamName, leadsArray, teamPageURL) {
+function sendEmail(templateName, memberName, memberEmail, teamName, teamPageURL, teamLeadName, teamLeadEmail) {
   console.log('sendEmail');
   const data = {
     memberName,
     memberEmail,
     teamName,
-    leadsArray,
+    teamLeadName,
+    teamLeadEmail,
     teamPageURL
   };
   console.log(data);
-
-  const teamLeadsEmails = leadsArray.map(i => i.teamLeadEmail);
-  console.log(`teamLeadsEmails: ${teamLeadsEmails.toString()}`);
 
   // Render HTML from the template
   const html = renderTemplate_(templateName, data);
@@ -148,7 +153,7 @@ try {
     {
       htmlBody: html,
       name: 'Friends of Portland NET',
-      cc: teamLeadsEmails.toString() || '',
+      cc: teamLeadEmail || '',
       inlineImages: { logo: logoBlob } // matches cid:logo in template
     }
   );

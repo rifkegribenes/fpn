@@ -505,7 +505,7 @@ function renderGoogleGroup() {
 }
 
 function getTeamLinks() {
-  const sheet = locSheet;
+  const sheet = teamSheet;
   const data = sheet.getDataRange().getValues();
   const headers = data[0];
   const teamIndex = headers.indexOf('Team');
