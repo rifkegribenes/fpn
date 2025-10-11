@@ -2,7 +2,7 @@ const TEAM_LEADS_GROUP_EMAIL = "team-leads@friendsofportlandnet.org";
 const ADMIN_GROUP_EMAIL = "adminteam@friendsofportlandnet.org"; 
 // console.log(`ss: ${ss}`);
 
-let isAdmin, isTeamLead, isTeamPageEditor;
+let isAdmin, isTeamLead, isTeamPageEditor, teamObj = {};
 
 function testGroupCheck() {
   const user = "admin@friendsofportlandnet.org";
@@ -19,6 +19,9 @@ function doGet(e) {
   const page = e.parameter.page || 'team'; // default page
   const team = e.parameter.team || '';
   let message = null;
+  teamObj = globalLookup(team);
+  console.log(`*****TEAM OBJECT doGET*******`);
+  console.log(teamObj);
 
   if (action === 'delete' && responseId) {
     console.log('trying to delete');
@@ -49,6 +52,10 @@ function getTeamData(teamParam) {
   console.log('getTeamData');
   console.log(`teamParam: ${teamParam}`);
 
+  teamObj = globalLookup(teamParam);
+  console.log(`*****TEAM OBJECT getTeamData *******`);
+  console.log(teamObj);
+
   // If no team param, redirect to team links page
   if (!teamParam) {
     window.location.href = 'https://sites.google.com/friendsofportlandnet.org/teamspace/teams';
@@ -57,23 +64,22 @@ function getTeamData(teamParam) {
   const userEmail = Session.getActiveUser().getEmail();
 
   // teamParam is shortname, fetch full name of team from param
-  const team = teamNameLookupFromShortName(teamParam);
-  return renderContent(team, userEmail);
+  return renderContent(teamParam, userEmail);
 }
 
 
-function renderContent(userTeam, userEmail) {
+function renderContent(userTeam, userEmail) { //userTeam is shortname
   console.log('renderContent');
   console.log(`userTeam: ${userTeam}, userEmail: ${userEmail}`);
   isAdmin = checkGroupMembership(ADMIN_GROUP_EMAIL, userEmail);
   isTeamLead = checkGroupMembership(TEAM_LEADS_GROUP_EMAIL, userEmail);
-  isTeamPageEditor = (isTeamLead && userEmail.includes(shortNameLookup(userTeam))) || isAdmin;
+  isTeamPageEditor = (isTeamLead && userEmail.includes(userTeam)) || isAdmin;
   console.log(`isAdmin: ${isAdmin}, isTeamLead: ${isTeamLead}, isTeamPageEditor: ${isTeamPageEditor}`);
 
   let content = `
     <div style="padding: 20px; font-family: Lato, sans-serif;">
       ${isTeamPageEditor ? showTeamPageEditorContent(userTeam) : ''}
-      ${showPublicContent(userTeam, isTeamPageEditor)}
+      ${showPublicContent(isTeamPageEditor)}
     </div>
   `;
 
@@ -103,11 +109,11 @@ function checkGroupMembership(groupEmail, userEmail) {
   }
 }
 
-function showPublicContent(userTeam, isTeamPageEditor) {
+function showPublicContent(isTeamPageEditor) {
   console.log('showPublicContent');
   return `
     <div class="publicContent">
-  <h2 style="font-size: 2rem; margin-bottom: 16px;">${userTeam}</h2>
+  <h2 style="font-size: 2rem; margin-bottom: 16px;">${teamObj.teamName}</h2>
 
   <div class="pcContainer container" style="
     display: flex !important;
@@ -125,7 +131,7 @@ function showPublicContent(userTeam, isTeamPageEditor) {
         margin-right: 0 !important;
         border-right: none !important;
       ">
-        ${announcementsBlock(userTeam, isTeamPageEditor)}
+        ${announcementsBlock(isTeamPageEditor)}
       </div>
     </div>
 
@@ -140,7 +146,7 @@ function showPublicContent(userTeam, isTeamPageEditor) {
         margin-right: 0 !important;
         border-right: none !important;
       ">
-        ${renderCalendar(userTeam)}
+        ${renderCalendar()}
       </div>
     </div>
 
@@ -157,7 +163,7 @@ function showPublicContent(userTeam, isTeamPageEditor) {
       ">
         <h3 class="blockhead" style="font-size: 1.5rem; margin-bottom: 12px;">Meeting Minutes</h3>
         <div class="minutes cont">
-          ${renderMinutesBlock(userTeam)}
+          ${renderMinutesBlock()}
         </div>
       </div>
 
@@ -168,14 +174,14 @@ function showPublicContent(userTeam, isTeamPageEditor) {
       ">
         <h3 class="blockhead" style="font-size: 1.5rem; margin-bottom: 12px;">Operations Plan</h3>
         <div class="ops cont">
-          ${renderOpsPlanBlock(userTeam)}
+          ${renderOpsPlanBlock()}
         </div>
       </div>
 
       <div class="grouplink block">
         <h3 class="blockhead" style="font-size: 1.5rem; margin-bottom: 12px;">Google Group</h3>
         <div class="gGroup cont">
-          ${renderGoogleGroup(userTeam)}
+          ${renderGoogleGroup()}
         </div>
       </div>
     </div>
@@ -184,13 +190,13 @@ function showPublicContent(userTeam, isTeamPageEditor) {
 
 }
 
-function showTeamPageEditorContent(team) {
+function showTeamPageEditorContent() {
   return `
     <div class="tlContainer container">
       <h3>
         <a 
           id="teamUpdateLink"
-          href="https://docs.google.com/forms/d/e/1FAIpQLSe9TU8URPswEVELyy9jOImY2_2vJ9OOE7O8L5JlNUuiJzPQYQ/viewform?usp=pp_url&entry.1458714000=${encodeURIComponent(team)}"
+          href="https://docs.google.com/forms/d/e/1FAIpQLSe9TU8URPswEVELyy9jOImY2_2vJ9OOE7O8L5JlNUuiJzPQYQ/viewform?usp=pp_url&entry.1458714000=${encodeURIComponent(teamObj.teamName)}"
           class="responsiveLink"
           style="
             display: block;
@@ -213,18 +219,17 @@ function showTeamPageEditorContent(team) {
 }
 
 
-function announcementsBlock(team, isTeamPageEditor) {
-  const teamShortName = shortNameLookup(team);
-  if (getRecentAnnouncements(team) && getRecentAnnouncements(team).length) {
-    return getRecentAnnouncements(team).map(item => renderAnnouncement(item, isTeamPageEditor, teamShortName)).join('');
+function announcementsBlock(isTeamPageEditor) {
+  if (getRecentAnnouncements() && getRecentAnnouncements().length) {
+    return getRecentAnnouncements().map(item => renderAnnouncement(item, isTeamPageEditor)).join('');
   } else {
-    return `<p>No announcements for ${team}</p>`
+    return `<p>No announcements for ${teamObj.teamName}</p>`
   }
   
 }
 
-function renderAnnouncement(obj, isTeamPageEditor, teamShortName) {
-  const deleteURLWithParams = `${obj.deleteURL}&page=team&team=${teamShortName}`
+function renderAnnouncement(obj, isTeamPageEditor) {
+  const deleteURLWithParams = `${obj.deleteURL}&page=team&team=${teamObj.shortName}`
   const adminBlock = isTeamPageEditor ? `<a href="${obj.editURL}">Edit</a> | <a href="${deleteURLWithParams}">Delete</a>` : '';
   return `<div class="announcement">
     <h4 class="aTitle" style="margin-bottom: 10px;">${obj.title}&#160;&#160;&#x7C;&#160;&#160;<span class="aDate" style="color:#333;font-weight:400;">${formatDate(obj.timestamp)}</span></h4>
@@ -233,25 +238,25 @@ function renderAnnouncement(obj, isTeamPageEditor, teamShortName) {
   </div>`
 }
 
-function renderCalendar(team) {
-  console.log(`calendarLookup: ${team}`);
-  console.log(calendarLookup(team));
+function renderCalendar() {
+  console.log(`teamObj.teamCal (242): ${teamObj.shortName}`);
+  console.log(teamObj.teamCal);
   
-  if (!!calendarLookup(team)) {
+  if (!!teamObj.teamCal) {
     return `<iframe 
               style="width: 100%; min-height: 400px; border: none;" 
-              src="${calendarLookup(team)}"
+              src="${teamObj.teamCal}"
               loading="lazy"
               allowfullscreen
             ></iframe>`;
   } else {
-    return `<p>No calendar available for ${team}</p>`;
+    return `<p>No calendar available for ${teamObj.teamName}</p>`;
   }
 }
 
 
 
-function getRecentAnnouncements(team = 'Test2') {
+function getRecentAnnouncements() {
   const data = updatesSheet.getDataRange().getValues();
 
   // Get header indexes
@@ -265,12 +270,12 @@ function getRecentAnnouncements(team = 'Test2') {
   const DELETE_URL_COL = headers.indexOf('Delete URL');
 
   if (TIMESTAMP_COL === -1 || UPDATE_TYPE_COL === -1 || TITLE_COL === -1 || BODY_COL === -1 || TEAM_COL === -1, EDIT_URL_COL === -1, DELETE_URL_COL === -1) {
-    throw new Error("Required columns are missing from the sheet.");
+    throw new Error("Required columns are missing from the update your team page sheet.");
   }
 
   // Filter rows where 'What do you want to update?' == 'Post announcement' and team matches function input
   const announcementRows = data.slice(1).filter(row => {
-    return row[UPDATE_TYPE_COL] === 'Post announcement' && row[TEAM_COL] === team;
+    return row[UPDATE_TYPE_COL] === 'Post announcement' && row[TEAM_COL] === teamObj.teamName;
   });
 
   // Sort by Timestamp descending
@@ -293,6 +298,7 @@ function getRecentAnnouncements(team = 'Test2') {
 }
 
 function renameFile(team, file, fileType, meetingDate) {
+  console.log('####################   renameFile');
   
   // Only touch recently added files (e.g. last 60 seconds)
   const created = file.getDateCreated();
@@ -328,7 +334,7 @@ function renameFile(team, file, fileType, meetingDate) {
       console.log(file.getDescription());
     }
   } else {
-    // console.log(`skipping older file ${ageInSeconds}`);
+    console.log(`skipping older file ${ageInSeconds}`);
   }
 }
 
@@ -341,6 +347,8 @@ function onFormSubmitHandler2(e) {
 
   // e.source is the Form object that triggered the event
   const submittedFormId = e.source.getId();
+  console.log(`onFormSubmitHandler2 submittedFormId: ${submittedFormId}`);
+  console.log(`UPDATES_FORM_ID: ${UPDATES_FORM_ID}`);
 
   if (submittedFormId !== UPDATES_FORM_ID) {
     console.log('Submission ignored: Not from team updates form.');
@@ -365,7 +373,7 @@ function onFormSubmitHandler2(e) {
     // console.log('minutesFile');
     // console.log(file.getName());
 
-    renameFile(team, file, fileType, meetingDate)
+    renameFile(globalLookup(team).shortName, file, fileType, meetingDate)
   }
 
   } else if (fileType === 'ops') {
@@ -374,7 +382,7 @@ function onFormSubmitHandler2(e) {
     // console.log('opsFile');
     // console.log(file.getName());
 
-    renameFile(team, file, fileType)
+    renameFile(globalLookup(team).shortName, file, fileType)
     
     }
   } else {
@@ -384,16 +392,19 @@ function onFormSubmitHandler2(e) {
 }
 
 
-function renderMinutesBlock(team) {
+function renderMinutesBlock() {
+  console.log('renderMinutesBlock');
   try {
     const folderId = MINUTES_FOLDER_ID; 
-    const files = getLatestMinutesFiles(team, folderId, 10);
+    const files = getLatestMinutesFiles(folderId, 10);
+
+    console.log('files: (minutes, 393)');
+    console.log(files);
 
     if (!!files && files.length) {
       let html = `<div class="minutes-block" style="font-family: Lato, sans-serif; font-size: 14px;">`;
 
       files.forEach(file => {
-        // Your existing date formatting code here...
 
         const createdDateStr = file.createdTime || null;
         let formattedDate = 'Unknown date';
@@ -409,7 +420,7 @@ function renderMinutesBlock(team) {
           formattedDate = Utilities.formatDate(createdDate, Session.getScriptTimeZone(), "MMM d, yyyy");
         }
 
-        const linkText = `${team} minutes ${formattedDate}`;
+        const linkText = `${teamObj.teamName} minutes ${formattedDate}`;
         const url = `https://drive.google.com/file/d/${file.id}/view`;
 
         html += `<p style="margin-bottom: 15px;">
@@ -420,19 +431,19 @@ function renderMinutesBlock(team) {
       html += `</ul></div>`;
       return html;
     } else {
-      return `<p>No meeting minutes available for ${team}</p>`;
+      return `<p>No meeting minutes available for ${teamObj.teamName}</p>`;
     }
   } catch (e) {
-    return `<p>Error: ${e.message}</p><p>No meeting minutes available for ${team}</p>`;
+    return `<p>Error: ${e.message}</p><p>No meeting minutes available for ${teamObj.teamName}</p>`;
   }
 }
 
 
 
-function renderOpsPlanBlock(team) {
+function renderOpsPlanBlock() {
   try {
     const folderId = OPS_FOLDER_ID; 
-    const file = getLatestOpsFile(team, folderId); 
+    const file = getLatestOpsFile(folderId); 
     console.log('renderOpsPlan');
     console.log(file);
     if (!!file) {
@@ -444,35 +455,36 @@ function renderOpsPlanBlock(team) {
         const createdDate = new Date(createdDateStr);
         formattedDate = Utilities.formatDate(createdDate, Session.getScriptTimeZone(), "MMM d, yyyy");
       }
-      const linkText = `${team} Operations Plan`;
+      const linkText = `${teamObj.teamName} Operations Plan`;
       const url = `https://drive.google.com/file/d/${file.id}/view`;
       html += `<p style="margin-bottom: 10px;"><a href="${url}" target="_blank">${linkText}</a> (${formattedDate})</p></div>`;
       return html;
     } else {
-      return `<p>No operations plan available for ${team}</p>`;
+      return `<p>No operations plan available for ${teamObj.teamName}</p>`;
     }
   } catch (e) {
-    return `<p>Error: ${e.message}</p><p>No operations plan available for ${team}</p>`;
+    return `<p>Error: ${e.message}</p><p>No operations plan available for ${teamObj.teamName}</p>`;
   }
 }
 
-function getLatestMinutesFiles(team, folderId, maxFiles) {
-  // console.log(`getLatestMinutesFiles`);
-  const teamPrefix = `${team}_minutes`;
-  // console.log(`teamPrefix: ${teamPrefix}`);
+function getLatestMinutesFiles(folderId, maxFiles) {
+  console.log(`getLatestMinutesFiles`);
+  const teamPrefix = `${teamObj.shortName}_minutes`;
+  console.log(`teamPrefix: ${teamPrefix}`);
   const response = Drive.Files.list({
     q: `'${folderId}' in parents and (mimeType='application/pdf' or mimeType='application/vnd.openxmlformats-officedocument.wordprocessingml.document' or mimeType='application/msword') and trashed=false and name contains '${teamPrefix}'`,
     orderBy: 'createdTime desc',
     maxResults: maxFiles,
     fields: 'files(id,name,createdTime,description)'
   });
-
+  console.log('##########################');
+  console.log(response);
   return response.files || response.items || [];
 }
 
-function getLatestOpsFile(team, folderId) {
+function getLatestOpsFile(folderId) {
   // console.log(`getLatestOpsFile`);
-  const teamPrefix = `${team}_ops`;
+  const teamPrefix = `${teamObj.shortName}_ops`;
   // console.log(`teamPrefix: ${teamPrefix}`);
   const response = Drive.Files.list({
     q: `'${folderId}' in parents and (mimeType='application/pdf' or mimeType='application/vnd.openxmlformats-officedocument.wordprocessingml.document' or mimeType='application/msword') and trashed=false and name contains '${teamPrefix}'`,
@@ -487,9 +499,9 @@ function getLatestOpsFile(team, folderId) {
   return matchingFile || null; // Return the matching file or null if none found
 }
 
-function renderGoogleGroup(team) {
-  const groupAddress = `https://groups.google.com/a/friendsofportlandnet.org/g/${shortNameLookup(team)}`;
-  return `<p><a href=${groupAddress}>${team} Google Group</a></p>`
+function renderGoogleGroup() {
+  const groupAddress = `https://groups.google.com/a/friendsofportlandnet.org/g/${teamObj.shortName}`;
+  return `<p><a href=${groupAddress}>${teamObj.teamName} Google Group</a></p>`
 }
 
 function getTeamLinks() {
@@ -506,6 +518,3 @@ function getTeamLinks() {
 
   return links;
 }
-
-
-

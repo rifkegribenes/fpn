@@ -12,6 +12,13 @@ function logSheetIds() {
   });
 }
 
+function toSpinalCase(str) {
+  return str
+    .replace(/([a-z])([A-Z])/g, '$1 $2')      // Add space between camelCase
+    .replace(/[\s_]+/g, '-')                  // Replace spaces and underscores with hyphens
+    .toLowerCase();                           // Convert to lowercase
+}
+
 const SheetCache = (() => {
   let idToSheetMap = null;
 
@@ -172,7 +179,7 @@ function shortNameLookup(team = 'Test2', ss) {
    * returns an object containing all other fields in the lookup sheet as output
    * 
    * */
-function globalLookup(team = 'woodstock') {
+function globalLookup(team) {
   console.log('globalLookup');
   console.log(`team: ${team}`);
 
