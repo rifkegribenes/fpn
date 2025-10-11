@@ -129,6 +129,7 @@ function globalLookup(team) {
   const aIdx = tmHeaders.indexOf('Assigned to (name)');
   const aeIdx = tmHeaders.indexOf('Alt email');
   const cIdx = tmHeaders.indexOf('Team calendar link');
+  const drIdx = tmHeaders.indexOf('Team drive link');
 
   // if those field headers don't exist, the function doesn't work; throw error
   const indices = {
@@ -140,7 +141,8 @@ function globalLookup(team) {
     lIdx,
     aIdx,
     aeIdx,
-    cIdx
+    cIdx,
+    drIdx
   };
 
   if (Object.values(indices).some(value => value === -1)) {
@@ -169,6 +171,7 @@ function globalLookup(team) {
       const tlEmail = String(r[lIdx] || '').trim();
       const tlAssigned = !!r[aIdx] && !!r[aeIdx]; // team lead is assigned if values in these two columns are not blank
       const teamCal = String(r[cIdx] || '').trim();
+      const teamDrive = String(r[drIdx] || '').trim();
       const teamObj = {
         shortName,
         teamName,
@@ -177,7 +180,8 @@ function globalLookup(team) {
         district,
         tlEmail,
         tlAssigned,
-        teamCal
+        teamCal,
+        teamDrive
       };
       console.log(teamObj);
       return teamObj;

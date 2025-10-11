@@ -178,10 +178,21 @@ function showPublicContent(isTeamPageEditor) {
         </div>
       </div>
 
-      <div class="grouplink block">
+      <div class="grouplink block" style="
+        padding-bottom: 20px;
+        margin-bottom: 20px;
+        border-bottom: 1px dotted #ccc;
+      ">
         <h3 class="blockhead" style="font-size: 1.5rem; margin-bottom: 12px;">Google Group</h3>
         <div class="gGroup cont">
           ${renderGoogleGroup()}
+        </div>
+      </div>
+
+      <div class="drivelink block">
+        <h3 class="blockhead" style="font-size: 1.5rem; margin-bottom: 12px;">Team Drive</h3>
+        <div class="gDrive cont">
+          ${renderGoogleDrive()}
         </div>
       </div>
     </div>
@@ -502,6 +513,17 @@ function getLatestOpsFile(folderId) {
 function renderGoogleGroup() {
   const groupAddress = `https://groups.google.com/a/friendsofportlandnet.org/g/${teamObj.shortName}`;
   return `<p><a href=${groupAddress}>${teamObj.teamName} Google Group</a></p>`
+}
+
+function renderGoogleDrive() {
+  console.log('renderGoogleDrive()');
+  const driveURL = teamObj.teamDrive;
+  if (driveURL) {
+    return `<p><a href=${driveURL}>${teamObj.teamName} shared Drive</a> (access other team documents here)</p>`
+  } else {
+    return `<p>Shared drive for ${teamObj.teamName} has not been set up yet.`
+  }
+  
 }
 
 function getTeamLinks() {
