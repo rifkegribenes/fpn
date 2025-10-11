@@ -446,9 +446,26 @@ function testHasMember() {
 }
 
 function renderTemplate_(fileName, obj) {
-  const t = HtmlService.createTemplateFromFile(fileName);
-  Object.assign(t, obj);
-  return t.evaluate().getContent(); // full HTML string
+  console.log('renderTemplate');
+  console.log(`fileName: ${fileName}`);
+  let t;
+  try {
+    t = HtmlService.createTemplateFromFile(fileName);
+  } catch(err) {
+    console.log(`renderTemplate_ 454: ${err}`);
+  }
+  try {
+    Object.assign(t, obj);
+  } catch(err) {
+    console.log(`renderTemplate_ 459: ${err}`);
+  }
+  let html;
+  try {
+    html = t.evaluate().getContent(); // full HTML string
+  } catch(err) {
+    console.log(`renderTemplate_ 464: ${err}`)
+  }
+  return html
 }
 
 function deleteFormResponse(responseId) {

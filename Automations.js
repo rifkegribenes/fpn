@@ -83,7 +83,7 @@ function processNewNET(row, ss, sh) {
   if (role === 'Team leader') {
     sendEmail('teamLeadOnboardEmail', memberName, memberEmail, teamName, teamPageURL, teamLeadName, teamLeadEmail);
   } else {
-    sendEmail('memberOnboardEmail', memberName, memberEmail, teamName, teamPageURL, teamLeadName, teamLeadEmail);
+    sendEmail('memberOnboardEmail2', memberName, memberEmail, teamName, teamPageURL, teamLeadName, teamLeadEmail);
   }
 
   console.log('83');
@@ -138,9 +138,15 @@ function sendEmail(templateName, memberName, memberEmail, teamName, teamPageURL,
   console.log(data);
 
   // Render HTML from the template
-  const html = renderTemplate_(templateName, data);
-  // console.log('html');
-  // console.log(html);
+  let html;
+  try {
+    html = renderTemplate_(templateName, data);
+  } catch(err) {
+    console.log(`Automations 144: ${err}`);
+  }
+  console.log('Automations 146');
+  console.log('html');
+  console.log(html);
   const logoBlob = DriveApp.getFileById('1xfjK56Z-rSTRF8XqXeDcoTTRrjDdNbl2').getBlob();
   // console.log('logoBlob');
   // console.log(logoBlob);
