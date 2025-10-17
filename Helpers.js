@@ -203,14 +203,12 @@ function globalLookup(team) {
    * 
    * */
 function teamLookup(neighborhood) {
-  console.log('202');
   console.log(`neighborhood: ${neighborhood}`);
     // if there's no neighborhood input, the function doesn't run
     if (!neighborhood) {
       console.log('no neighborhood provided');
       return null;
     }   
-  console.log('209');
       // find header and rows in neighborhood lookup sheet
       const locHeaders = [ ...readSheet_(locSheet).headers ];
       const locRows = [ ...readSheet_(locSheet).rows ];
@@ -233,7 +231,6 @@ function teamLookup(neighborhood) {
       if (nIdx === -1 || sIdxN === -1) {
         throw new Error(`NeighborhoodLookup must have headers "Neighborhood" and "Short name"`);
       }
-      console.log('232');
       // identify the indices (position in the row array) for each of the field names we care about in the team lookup sheet
       const tIdx = tHeaders.indexOf('Team');
       const sIdxT = tHeaders.indexOf('Short name')
@@ -264,15 +261,15 @@ function teamLookup(neighborhood) {
           teamShortName = r[sIdxN]
         }
       });
-      console.log('272');
+
       // loop through the rows in the team lookup sheet
       // in each row, check to see if the team short name value 
       // matches the short name in that row
 
       for (const r of tRows) {
-        console.log(String(r[sIdxT]).trim().toLowerCase(), teamShortName.trim().toLowerCase());
+        // console.log(String(r[sIdxT]).trim().toLowerCase(), teamShortName.trim().toLowerCase());
         if (String(r[sIdxT]).trim().toLowerCase() === teamShortName.trim().toLowerCase()) {
-          console.log('MATCH: 279');
+          // console.log('MATCH: 279');
         // gather the group email, team name, calendar link, and team page URL from that row
           const group = String(r[gIdx] || '').trim();
           const team = String(r[tIdx] || '').trim();
@@ -280,10 +277,10 @@ function teamLookup(neighborhood) {
           const teamCalendar = String(r[cIdx] || '').trim();
           // check if the 'team lead email assigned' column is filled
           // if so, return the teamLeadEmail; otherwise return null
-          console.log(`is the ${team} team email assigned? ${!!r[tlaIdx]}`)
+          // console.log(`is the ${team} team email assigned? ${!!r[tlaIdx]}`)
           teamLeadEmail = !!r[tlaIdx] ?  String(r[tleIdx]) : null;
           const teamLeadName = teamLeadEmail ? String(r[tlaIdx] || '').trim() : null;
-          console.log(`teamLeadEmail: ${teamLeadEmail}, teamLeadName: ${teamLeadName}`);
+          // console.log(`teamLeadEmail: ${teamLeadEmail}, teamLeadName: ${teamLeadName}`);
 
           // store those values in the return object
           returnObj.group = group;
@@ -305,7 +302,7 @@ function teamLookup(neighborhood) {
         }
 
       };
-      console.log('304');
+      // console.log('304');
     } 
 
 

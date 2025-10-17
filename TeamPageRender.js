@@ -113,91 +113,96 @@ function showPublicContent(isTeamPageEditor) {
   console.log('showPublicContent');
   return `
     <div class="publicContent">
-  <h2 style="font-size: 2rem; margin-bottom: 16px;">${teamObj.teamName}</h2>
-
-  <div class="pcContainer container" style="
-    display: flex !important;
-    flex-direction: column !important;  /* force single column */
-    flex-wrap: nowrap !important;
-    width: 100%;
-  ">
-    <div class="announcements block" style="
-      max-width: 100% !important;
-      margin-bottom: 24px;
-    ">
-      <h3 class="blockhead" style="font-size: 1.5rem; margin-bottom: 12px;">Announcements</h3>
-      <div class="announcements cont" style="
-        padding-right: 0 !important;
-        margin-right: 0 !important;
-        border-right: none !important;
-      ">
-        ${announcementsBlock(isTeamPageEditor)}
+      <h2 style="font-size: 2rem; margin-bottom: 16px;">${teamObj.teamName}</h2>
+      <div class="quickLinks" id="quickLinks>
+        <p class="qlHed">Quick Links</p>
+        <p class="qlP"><a href="https://volunteerpdx.net" target="_blank">Portland NET Wiki</a>
+        <p class="qlP"><a href="https://app.betterimpact.com/" target="_blank">Log hours on MIP</a>
       </div>
-    </div>
 
-    <div class="calendar block" style="
-      max-width: 100% !important;
-      margin-bottom: 24px;
-    ">
-      <h3 class="blockhead" style="font-size: 1.5rem; margin-bottom: 12px;">Upcoming Events</h3>
-      <div class="calendar cont" style="
-        max-width: 100% !important;
-        padding-right: 0 !important;
-        margin-right: 0 !important;
-        border-right: none !important;
+      <div class="pcContainer container" style="
+        display: flex !important;
+        flex-direction: column !important;  /* force single column */
+        flex-wrap: nowrap !important;
+        width: 100%;
       ">
-        ${renderCalendar()}
-      </div>
-    </div>
+        <div class="announcements block" style="
+          max-width: 100% !important;
+          margin-bottom: 24px;
+        ">
+          <h3 class="blockhead" style="font-size: 1.5rem; margin-bottom: 12px;">Announcements</h3>
+          <div class="announcements cont" style="
+            padding-right: 0 !important;
+            margin-right: 0 !important;
+            border-right: none !important;
+          ">
+            ${announcementsBlock(isTeamPageEditor)}
+          </div>
+        </div>
 
-    <div class="pcColumnContainer container" style="
-      display: flex !important;
-      flex-direction: column !important;
-      flex-wrap: nowrap !important;
-      max-width: 100% !important;
-    ">
-      <div class="minutes block" style="
-        padding-bottom: 20px;
-        margin-bottom: 20px;
-        border-bottom: 1px dotted #ccc;
-      ">
-        <h3 class="blockhead" style="font-size: 1.5rem; margin-bottom: 12px;">Meeting Minutes</h3>
-        <div class="minutes cont">
-          ${renderMinutesBlock()}
+        <div class="calendar block" style="
+          max-width: 100% !important;
+          margin-bottom: 24px;
+        ">
+          <h3 class="blockhead" style="font-size: 1.5rem; margin-bottom: 12px;">Upcoming Events</h3>
+          <div class="calendar cont" style="
+            max-width: 100% !important;
+            padding-right: 0 !important;
+            margin-right: 0 !important;
+            border-right: none !important;
+          ">
+            ${renderCalendar()}
+          </div>
+        </div>
+
+        <div class="pcColumnContainer container" style="
+          display: flex !important;
+          flex-direction: column !important;
+          flex-wrap: nowrap !important;
+          max-width: 100% !important;
+        ">
+          <div class="minutes block" style="
+            padding-bottom: 20px;
+            margin-bottom: 20px;
+            border-bottom: 1px dotted #ccc;
+          ">
+            <h3 class="blockhead" style="font-size: 1.5rem; margin-bottom: 12px;">Meeting Minutes</h3>
+            <div class="minutes cont">
+              ${renderMinutesBlock()}
+            </div>
+          </div>
+
+          <div class="ops block" style="
+            padding-bottom: 20px;
+            margin-bottom: 20px;
+            border-bottom: 1px dotted #ccc;
+          ">
+            <h3 class="blockhead" style="font-size: 1.5rem; margin-bottom: 12px;">Operations Plan</h3>
+            <div class="ops cont">
+              ${renderOpsPlanBlock()}
+            </div>
+          </div>
+
+          <div class="grouplink block" style="
+            padding-bottom: 20px;
+            margin-bottom: 20px;
+            border-bottom: 1px dotted #ccc;
+          ">
+            <h3 class="blockhead" style="font-size: 1.5rem; margin-bottom: 12px;">Google Group</h3>
+            <div class="gGroup cont">
+              ${renderGoogleGroup()}
+            </div>
+          </div>
+
+          <div class="drivelink block">
+            <h3 class="blockhead" style="font-size: 1.5rem; margin-bottom: 12px;">Team Drive</h3>
+            <div class="gDrive cont">
+              ${renderGoogleDrive()}
+            </div>
+          </div>
         </div>
       </div>
-
-      <div class="ops block" style="
-        padding-bottom: 20px;
-        margin-bottom: 20px;
-        border-bottom: 1px dotted #ccc;
-      ">
-        <h3 class="blockhead" style="font-size: 1.5rem; margin-bottom: 12px;">Operations Plan</h3>
-        <div class="ops cont">
-          ${renderOpsPlanBlock()}
-        </div>
-      </div>
-
-      <div class="grouplink block" style="
-        padding-bottom: 20px;
-        margin-bottom: 20px;
-        border-bottom: 1px dotted #ccc;
-      ">
-        <h3 class="blockhead" style="font-size: 1.5rem; margin-bottom: 12px;">Google Group</h3>
-        <div class="gGroup cont">
-          ${renderGoogleGroup()}
-        </div>
-      </div>
-
-      <div class="drivelink block">
-        <h3 class="blockhead" style="font-size: 1.5rem; margin-bottom: 12px;">Team Drive</h3>
-        <div class="gDrive cont">
-          ${renderGoogleDrive()}
-        </div>
-      </div>
-    </div>
-  </div>
-</div>`
+    </div>`
 
 }
 
@@ -368,9 +373,9 @@ function onFormSubmitHandler2(e) {
 
   // File upload logic
   const responses = e.namedValues;
-  const team = responses["Your Team"][0]; 
+  const team = responses["Your Team"][0] || 'Unknown'; 
   const fileType = responses["What do you want to update?"][0].includes('minutes') ? 'minutes' : responses["What do you want to update?"][0].includes('operations') ? 'ops' : '';
-  const meetingDate = responses["Date of meeting"][0];
+  const meetingDate = responses["Date of meeting"][0] || '';
   console.log(`team: ${team}, fileType: ${fileType}`);
 
   const minutesFolder = DriveApp.getFolderById(MINUTES_FOLDER_ID);

@@ -41,6 +41,15 @@
       text-decoration: underline;
     }
 
+    .quickLinks {
+      padding: 10px 20px;
+      position: absolute;
+      border: 1px dotted rgba(34, 110, 147, 1);
+      top: 20px;
+      right: 20px;
+      background-color: rgba(34, 110, 147, .2);
+    }
+
     img {
       max-width: 100%;
       height: auto;
@@ -139,6 +148,7 @@
     // Insert logo after DOM is ready
     document.addEventListener("DOMContentLoaded", function() {
       const logo = document.getElementById("logo");
+      const quickLinks = document.getElementById('quickLinks');
       const base64ImageWithQuotes = <?= JSON.stringify(headerImage) ?>;
       const base64Image = base64ImageWithQuotes.replace(/^"+|"+$/g, '');
       logo.src = base64Image;
@@ -149,11 +159,11 @@
       logo.onload = function() {
         
         if (isMobile) {
-          logo.style.width = '200px'; // force bigger width on mobile
+          logo.style.width = '200px'; 
           logo.style.height = 'auto';
           logo.style.setProperty('width', '200px', 'important');
         } else {
-          logo.style.width = '100px'; // reset for desktop or keep original
+          logo.style.width = '100px'; 
           logo.style.height = 'auto';
         }
       }
@@ -164,7 +174,7 @@
 
     if (isMobile) {
       // Increase all text sizes by scaling the base font size of the <body>
-      document.body.style.fontSize = '18px';
+      document.body.style.fontSize = '20px';
 
       const updateLink = document.getElementById("teamUpdateLink");
       if (updateLink) {
@@ -173,6 +183,11 @@
         updateLink.style.fontSize = "18px"; 
       }
 
+      if (quickLinks) {
+        quickLinks.style.fontSize = '24px !important';
+        quicklinks.style.setProperty('fontSize', '24px', 'important');
+      }
+      
       // increase line-height for better readability
       document.body.style.lineHeight = '1.5';
 
