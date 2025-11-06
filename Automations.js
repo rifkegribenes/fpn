@@ -147,7 +147,7 @@ function sendEmail(templateName, memberName, memberEmail, teamName, teamPageURL,
   console.log('Automations 146');
   console.log('html');
   console.log(html);
-  const logoBlob = DriveApp.getFileById('1xfjK56Z-rSTRF8XqXeDcoTTRrjDdNbl2').getBlob();
+  const logoBlob = DriveApp.getFileById('1fnUYmb2be1YYd1HZAh97pzUlW4jHeK5A').getBlob();
   // console.log('logoBlob');
   // console.log(logoBlob);
 
