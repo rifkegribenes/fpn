@@ -357,6 +357,7 @@ function renameFile(team, file, fileType, meetingDate) {
 
 // prepends the team name to meeting minutes and ops plan files so they can be found later in the drive folder
 function onFormSubmitHandler2(e) {
+  
   console.log(`onFormSubmitHandler2`);
   const sheetName = e.range.getSheet().getName();
   console.log(`sheetName = ${sheetName}`);

@@ -100,9 +100,11 @@ function addToGoogleGroups(teamObj, row, ss, sh) {
   const { headers } = readSheet_(ss.getSheetByName('WorkspaceRegForm'));
   const nIdx = headers.indexOf('Neighborhood');
   const eIdx = headers.indexOf('Email');
+  const rIdx = headers.indexOf('Role');
   const email = (rowData[eIdx] || '').trim();
   const team = teamObj.team;
   const teamGroupEmail = teamObj.group;
+  const teamLead = (rowData[rIdx].includes("leader"));
 
   if (!email || !/@/.test(email)) {
     Logger.log(`SKIP: invalid/missing email. Row: ${JSON.stringify(row)}`);
@@ -117,6 +119,16 @@ function addToGoogleGroups(teamObj, row, ss, sh) {
   // 2) Team group
   if (!teamGroupEmail) {
     Logger.log(`SKIP team group: cannot resolve for team="${team}" email="${email}"`);
+    return;
+  }
+ 
+  addToGroupIdempotent_(teamGroupEmail, email);
+  console.log(`added ${email} to ${teamGroupEmail}`);
+
+  // 3) Team leads group (if applicable)
+  if (teamLead) {
+    Logger.log(`${email} is a team Lead for ${team}, adding to team leads group`);
+    addToGroupIdempotent_('team-leads@friendsofportlandnet.org', email);
     return;
   }
  
@@ -168,6 +180,17 @@ try {
 }
   
 }
+
+
+// ARRAY FORMULAS
+
+// TEAM (M2): =ARRAYFORMULA(IF(F2:F="", "", VLOOKUP(F2:F, NeighborhoodLookup!A:B, 2, FALSE)))
+
+// DISTRICT (N2): =ARRAYFORMULA(IF(M2:M="", "", VLOOKUP(M2:M, TeamLookup!A:E, 5, FALSE)))   
+
+// FULL NAME (O2): =ARRAYFORMULA(IF(C2:C="", "", C2:C & " " & D2:D))
+
+
 
 
 
