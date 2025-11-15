@@ -1,7 +1,7 @@
 // backend config
 const BASE_URL = 'https://script.google.com/a/macros/friendsofportlandnet.org/s/AKfycbyoBFWtqbBdIG4ctrGkZii_IKMPP-dPWLzL27PhsuiQAO7QepLOyvYwnTptfH8Gey52/exec'
 const ss = SpreadsheetApp.openById('1A5wqQoAZhgk6QLFB4_8stVZUMP7iHdTrQikEa4ur4go');
-const LOGSHEET = SpreadsheetApp.openById('1r3F1yucrqMf4EEOTWW0T6ULAQnOHlk01TTTI0Y5hMqs');
+// const LOGSHEET = SpreadsheetApp.openById('1r3F1yucrqMf4EEOTWW0T6ULAQnOHlk01TTTI0Y5hMqs');
 const WorkspaceRegFormSheetID = '314391585';
 const MasterMembersSheetID = '0';
 const NeighborhoodLookupSheetID = '1530055079'; // formerly Location Lookup

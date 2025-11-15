@@ -126,11 +126,11 @@ function addToGoogleGroups(teamObj, row, ss, sh) {
   console.log(`added ${email} to ${teamGroupEmail}`);
 
   // 3) Team leads group (if applicable)
-  if (teamLead) {
-    Logger.log(`${email} is a team Lead for ${team}, adding to team leads group`);
-    addToGroupIdempotent_('team-leads@friendsofportlandnet.org', email);
-    return;
-  }
+  // if (teamLead) {
+  //   Logger.log(`${email} is a team Lead for ${team}, adding to team leads group`);
+  //   addToGroupIdempotent_('team-leads@friendsofportlandnet.org', email);
+  //   return;
+  // }
  
   addToGroupIdempotent_(teamGroupEmail, email);
   console.log(`added ${email} to ${teamGroupEmail}`);
