@@ -1,14 +1,45 @@
+// onSubmit handler attached to team page update form, do not push to clasp, edit here:
+// https://script.google.com/u/0/home/projects/1xWX3LCTgnR5oa0xSbH57MNif6BVLTtQnjpe7WmfSdcbstiXy6T5eCxoV/edit
+
 const baseURL = 'https://script.google.com/macros/s/AKfycbzv51l398A1ZWWpxFpCZOeYwt6gYiBDZN3izI3lkejN7LT3IhSBw1TO0J0KQT7G1SFhRg/exec';
 // const baseURL = 'https://friends-of-portland-net.web.app';
 
+function logToSheet(entry) {
+  try {
+    const sheet = SpreadsheetApp.openById('1A5wqQoAZhgk6QLFB4_8stVZUMP7iHdTrQikEa4ur4go').getSheetByName('ServerLogs');
+    sheet.appendRow([
+      new Date(),
+      entry.level || "",
+      entry.where || "",
+      entry.groupEmail || "",
+      entry.userEmail || "",
+      entry.message || "",
+      entry.stack || ""
+    ]);
+  } catch (err) {
+    Logger.log(`logToSheet() failed: ${err.message}`);
+  }
+}
 
-// onSubmit handler attached to team page update form, do not push to clasp
+function safeLog(where, level, message, extra = {}) {
+    try {
+      logToSheet({
+        level,
+        where,
+        message,
+        ...extra
+      });
+    } catch (err) {
+      // swallow any logging errors
+    }
+  }
 
 function onFormSubmitHandler(e) {
   var response = e.response;
   var editUrl = response.getEditResponseUrl();
   const responseId = response.getId();
   console.log(`responseId: ${responseId}`);
+  safeLog('onFormSubmitHandler: Team Update Form', 'info', `responseId: ${responseId}, response: ${response}`);
 
   // Get the headers and find the columns labeled "Edit URL", "Delete URL", and "Id"
   var sheet = SpreadsheetApp.openById('1A5wqQoAZhgk6QLFB4_8stVZUMP7iHdTrQikEa4ur4go').getSheetByName('TeamPageUpdateForm');
@@ -35,7 +66,8 @@ function onFormSubmitHandler(e) {
   sheet.getRange(lastRow, responseIdIndex).setValue(responseId);
   sheet.getRange(lastRow, deleteUrlColIndex).setValue(deleteUrl);
 
-  console.log(`check sheet, were values stored? formResponseHandler 32`);
+  safeLog('onFormSubmitHandler: Team Update Form', 'check sheet, were values stored? formResponseHandler 66', `responseId: ${responseId}, editUrl: ${editUrl}, deleteUrl: ${deleteUrl}`);
+  console.log(`check sheet, were values stored? formResponseHandler 67`);
 }
 
 

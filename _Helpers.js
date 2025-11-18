@@ -12,6 +12,36 @@ function logSheetIds() {
   });
 }
 
+function logToSheet(entry) {
+  try {
+    const sheet = SpreadsheetApp.openById('1A5wqQoAZhgk6QLFB4_8stVZUMP7iHdTrQikEa4ur4go').getSheetByName('ServerLogs');
+    sheet.appendRow([
+      new Date(),
+      entry.level || "",
+      entry.where || "",
+      entry.groupEmail || "",
+      entry.userEmail || "",
+      entry.message || "",
+      entry.stack || ""
+    ]);
+  } catch (err) {
+    Logger.log(`logToSheet() failed: ${err.message}`);
+  }
+}
+
+function safeLog(where, level, message, extra = {}) {
+    try {
+      logToSheet({
+        level,
+        where,
+        message,
+        ...extra
+      });
+    } catch (err) {
+      // swallow any logging errors
+    }
+  }
+
 function toSpinalCase(str) {
   return str
     .replace(/([a-z])([A-Z])/g, '$1 $2')      // Add space between camelCase
