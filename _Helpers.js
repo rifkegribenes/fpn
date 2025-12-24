@@ -1,8 +1,3 @@
-// run this function from the script editor to grant oAuth scopes for different GWS assets (sendMail, access drive, groups, etc.)
-function authorizeOnce() {
-  DriveApp.getRootFolder();
-}
-
 function logSheetIds() {
   const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
   const sheets = spreadsheet.getSheets();
@@ -47,6 +42,45 @@ function toSpinalCase(str) {
     .replace(/([a-z])([A-Z])/g, '$1 $2')      // Add space between camelCase
     .replace(/[\s_]+/g, '-')                  // Replace spaces and underscores with hyphens
     .toLowerCase();                           // Convert to lowercase
+}
+
+
+function onChange(e) {
+  addTimestampTPU(e);
+}
+
+function getFormattedTimestamp() {
+  const d = new Date();
+  const pad = (n) => String(n).padStart(2, '0');
+
+  const month = pad(d.getMonth() + 1);
+  const day = pad(d.getDate());
+  const year = d.getFullYear();
+
+  const hours = pad(d.getHours());
+  const minutes = pad(d.getMinutes());
+  const seconds = pad(d.getSeconds());
+
+  return `${month}/${day}/${year} ${hours}:${minutes}:${seconds}`;
+}
+
+
+// adds timestamp to TeamPageUpdate sheet
+function addTimestampTPU(e) {
+  if (e.changeType !== 'INSERT_ROW') return;
+
+  const SHEET_NAME = 'TeamPageUpdateForm'; 
+  const sheet = e.source.getSheetByName(SHEET_NAME);
+  if (!sheet) return;
+
+  const lastRow = sheet.getLastRow();
+  if (lastRow < 2) return;
+
+  const timestampCell = sheet.getRange(lastRow, 1); // column A
+
+  if (!timestampCell.getValue()) {
+    timestampCell.setValue(getFormattedTimestamp());
+  }
 }
 
 const SheetCache = (() => {
