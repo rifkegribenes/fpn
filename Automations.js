@@ -1,26 +1,154 @@
 /** onEditHandler triggers the processNewNET script when a row in the WorkspaceRegForm sheet is edited, IF the edit sets the 'Processed' checkbox to true */ 
 
-function onEditHandler(e) {
-  console.log('onEdit');
-  if (!e) return;
-  const ssActive = e.source;  
-  const sh = ssActive.getActiveSheet();
+// Installable onChange trigger
+function onChangeHandler(e) {
+  try {
+    const sh = e.source.getActiveSheet();
+    if (!sh) return;
 
-  if (sh.getName() !== 'WorkspaceRegForm') return;   
-  if (e.range.getColumn() !== 1) return;       // column A = 1
-  if (e.range.getRow() < 2) return;            // skip header
-  if (e.value !== 'TRUE') return;              // only when box is checked
+    // Only handle TeamPageUpdateForm
+    if (sh.getName() === 'TeamPageUpdateForm') {
+      if (e.changeType === 'INSERT_ROW') {
+        addTimestampTPU(e);                 // add timestamp
+        handleBannerEditOnChange(sh);       // process banner on new row
+      }
+    }
+
+    // WorkspaceRegForm checkbox edits only happen via onEdit
+  } catch (err) {
+    console.error('onChangeHandler error:', err);
+  }
+}
+
+
+
+// Installable onEdit trigger
+function onEditHandler(e) {
+  safeLog('onEditHandler', 'info', 'Automations: 18: Function called');
+  const sh = e.range.getSheet();
+  if (!sh) return;
+
+  if (sh.getName() === 'WorkspaceRegForm') {
+    safeLog('onEditHandler', 'info', 'Automations: 23: WorkspaceRegForm');
+    handleWorkspaceRegEdit(e);
+  }
+}
+
+
+
+// adds timestamp to TeamPageUpdateForm sheet
+function addTimestampTPU(e) {
+  if (e.changeType !== 'INSERT_ROW') return;
+
+  const SHEET_NAME = 'TeamPageUpdateForm'; 
+  const sheet = e.source.getSheetByName(SHEET_NAME);
+  if (!sheet) return;
+
+  const lastRow = sheet.getLastRow();
+  if (lastRow < 2) return;
+
+  const timestampCell = sheet.getRange(lastRow, 1); // column A
+
+  if (!timestampCell.getValue()) {
+    timestampCell.setValue(getFormattedTimestamp());
+  }
+}
+
+
+function handleWorkspaceRegEdit(e) {
+  safeLog('onEditHandler', 'info', 'WorkspaceRegForm');
+
+  const ss = e.source;
+
+  const sh = e.range.getSheet();
+  const row = e.range.getRow();
+  const col = e.range.getColumn();
+
+  // Only react to column A (processed checkbox) after header
+  if (col !== 1 || row < 2) return;
+  if (e.value !== 'TRUE') return;
 
   try {
-    // console.log('row:');
-    // console.log(e.range.getRow()); // this is a row number, not the row data
-    processNewNET(e.range.getRow(), ssActive, sh);
+    processNewNET(row, ss, sh);
   } finally {
-    /** to reset the checkbox after the script runs, uncomment the row below this comment. for now it leaves the box checked so we can see who has been processed, and admins can manually uncheck/recheck the box if a row needs to be reprocessed for any reason */ 
-
+    // optional: reset checkbox
     // e.range.setValue(false);
   }
 }
+
+async function handleBannerEditOnChange(sheet) {
+  safeLog('handleBannerEditOnChange', 'info', 'function called');
+  try {
+    Logger.log('handleBannerEditOnChange: 82')
+    const sh = sheet;
+    const lastRow = sh.getLastRow();
+    if (lastRow < 2) return;
+
+    Logger.log('handleBannerEditOnChange: 86')
+    safeLog('handleBannerEditOnChange', 'info', '86');
+
+    const headers = sh.getRange(1, 1, 1, sh.getLastColumn()).getValues()[0];
+    const headerCol = name => headers.indexOf(name) + 1;
+
+    const bannerCol = headerCol('Upload banner photo here');
+    const publicUrlCol = headerCol('BannerPublicURL');
+    const teamCol = headerCol('Your Team');
+
+    Logger.log('handleBannerEditOnChange: 95')
+    safeLog('handleBannerEditOnChange', 'info', '95');
+
+    const bannerUrl = sh.getRange(lastRow, bannerCol).getValue();
+    const existingPublicUrl = sh.getRange(lastRow, publicUrlCol).getValue();
+
+    Logger.log('handleBannerEditOnChange: 100')
+    safeLog('handleBannerEditOnChange', 'info', '100');
+
+    if (!bannerUrl || existingPublicUrl) return;
+
+    const team = sh.getRange(lastRow, teamCol).getValue();
+    const teamSlug = globalLookup(team).shortName;
+
+    Logger.log('handleBannerEditOnChange: 107')
+    safeLog('handleBannerEditOnChange', 'info', '107');
+
+    // Extract Drive file ID
+    const match = bannerUrl.match(/(?:id=|\/d\/)([a-zA-Z0-9_-]+)/);
+    if (!match) throw new Error('Cannot extract Drive file ID');
+
+    const file = DriveApp.getFileById(match[1]);
+
+    Logger.log('handleBannerEditOnChange: 115')
+    safeLog('handleBannerEditOnChange', 'info', '115');
+
+    // Rename
+    const ext = file.getName().split('.').pop();
+    const newName = `${teamSlug}-banner.${ext}`;
+    file.setName(newName);
+
+    Logger.log('handleBannerEditOnChange: 122')
+    safeLog('handleBannerEditOnChange', 'info', '122');
+
+    // Upload to GitHub
+    const publicUrl = await uploadFileToGitHub(
+      newName,
+      file.getBlob(),
+      `Upload banner for ${team}`
+    );
+
+    Logger.log('handleBannerEditOnChange: 131')
+    safeLog('handleBannerEditOnChange', 'info', '131');
+
+    // Write back to sheet to mark processed
+    sh.getRange(lastRow, publicUrlCol).setValue(publicUrl);
+
+    safeLog('handleBannerEditOnChange', 'info', `Banner processed for row ${lastRow}`);
+  } catch (err) {
+    Logger.log('Banner upload failed', err);
+    safeLog('handleBannerEditOnChange', 'error', `Banner upload failed: ${err}`);
+  }
+}
+
+
 
 
 /**  processNewNET does 3 things:

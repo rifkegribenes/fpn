@@ -44,11 +44,6 @@ function toSpinalCase(str) {
     .toLowerCase();                           // Convert to lowercase
 }
 
-
-function onChange(e) {
-  addTimestampTPU(e);
-}
-
 function getFormattedTimestamp() {
   const d = new Date();
   const pad = (n) => String(n).padStart(2, '0');
@@ -62,25 +57,6 @@ function getFormattedTimestamp() {
   const seconds = pad(d.getSeconds());
 
   return `${month}/${day}/${year} ${hours}:${minutes}:${seconds}`;
-}
-
-
-// adds timestamp to TeamPageUpdate sheet
-function addTimestampTPU(e) {
-  if (e.changeType !== 'INSERT_ROW') return;
-
-  const SHEET_NAME = 'TeamPageUpdateForm'; 
-  const sheet = e.source.getSheetByName(SHEET_NAME);
-  if (!sheet) return;
-
-  const lastRow = sheet.getLastRow();
-  if (lastRow < 2) return;
-
-  const timestampCell = sheet.getRange(lastRow, 1); // column A
-
-  if (!timestampCell.getValue()) {
-    timestampCell.setValue(getFormattedTimestamp());
-  }
 }
 
 const SheetCache = (() => {

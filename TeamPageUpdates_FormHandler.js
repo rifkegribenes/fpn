@@ -1,4 +1,6 @@
 // onSubmit handler attached to team page update form, do not push to clasp, edit here:
+
+// as of 12/23/2025 this is unused because form has been switched to firebase-hosted UI
 // https://script.google.com/u/0/home/projects/1xWX3LCTgnR5oa0xSbH57MNif6BVLTtQnjpe7WmfSdcbstiXy6T5eCxoV/edit
 
 const baseURL = 'https://script.google.com/macros/s/AKfycbzv51l398A1ZWWpxFpCZOeYwt6gYiBDZN3izI3lkejN7LT3IhSBw1TO0J0KQT7G1SFhRg/exec';
