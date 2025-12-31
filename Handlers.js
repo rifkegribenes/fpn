@@ -4,7 +4,9 @@ async function uploadFileToGitHub(fileName, fileBlob, commitMessage) {
   const user = PropertiesService.getScriptProperties().getProperty('GITHUB_USER');
   const repo = PropertiesService.getScriptProperties().getProperty('GITHUB_REPO');
 
-  const path = encodeURIComponent(fileName);
+  const timestamp = Date.now();
+  const fileNameWithVersion = `${fileName.split('.')[0]}-${timestamp}.${fileName.split('.').pop()}`;
+  const path = encodeURIComponent(fileNameWithVersion);
   const content = Utilities.base64Encode(fileBlob.getBytes());
 
   // Check if file exists to get SHA
