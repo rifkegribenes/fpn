@@ -5,7 +5,11 @@ async function uploadFileToGitHub(fileName, fileBlob, commitMessage) {
   const repo = PropertiesService.getScriptProperties().getProperty('GITHUB_REPO');
 
   const timestamp = Date.now();
-  const fileNameWithVersion = `${fileName.split('.')[0]}-${timestamp}.${fileName.split('.').pop()}`;
+  const lastDot = fileName.lastIndexOf('.');
+  const base = fileName.substring(0, lastDot);
+  const ext = fileName.substring(lastDot + 1);
+  const fileNameWithVersion = `${base}-${timestamp}.${ext}`;
+
   const path = encodeURIComponent(fileNameWithVersion);
   const content = Utilities.base64Encode(fileBlob.getBytes());
 
@@ -37,7 +41,7 @@ async function uploadFileToGitHub(fileName, fileBlob, commitMessage) {
   const json = JSON.parse(response.getContentText());
 
   if (json.content && json.content.path) {
-    return `https://${user}.github.io/${repo}/${fileName}`;
+    return `https://${user}.github.io/${repo}/${fileNameWithVersion}`;
   } else {
     const msg = response.getContentText();
     safeLog('uploadFileToGitHub', 'error', `${msg}`);
