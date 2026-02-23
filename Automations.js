@@ -175,16 +175,38 @@ function processNewNET(row, ss, sh) {
   const { headers } = readSheet_(ss.getSheetByName('WorkspaceRegForm'));
 
   // assign value to role variable
-  const role = (rowData[headers.indexOf('Role')] || '').trim();
+
+  const roleIndex = headers.findIndex(h =>
+    h && h.toString().toLowerCase().includes('role')
+  );
+  const role = (roleIndex !== -1
+    ? (rowData[roleIndex] || '').trim()
+    : '');
+
 
   // assign value to memberName variable
-  const memberName = (rowData[headers.indexOf('First Name')] || '').trim();
+  const memberNameIndex = headers.findIndex(h =>
+    h && h.toString().toLowerCase().includes('first name')
+  );
+  const memberName = (memberNameIndex !== -1
+    ? (rowData[memberNameIndex] || '').trim()
+    : '');
 
   // assign value to memberEmail variable
-  const memberEmail = (rowData[headers.indexOf('Email')] || '').trim();
+  const memberEmailIndex = headers.findIndex(h =>
+    h && h.toString().toLowerCase().includes('email')
+  );
+  const memberEmail = (memberEmailIndex !== -1
+    ? (rowData[memberEmailIndex] || '').trim()
+    : '');
 
   // assign value to neigbhorhood variable
-  const neighborhood = (rowData[headers.indexOf('Neighborhood')] || '').trim();
+  const neighborhoodIndex = headers.findIndex(h =>
+    h && h.toString().toLowerCase().includes('neighborhood')
+  );
+  const neighborhood = (neighborhoodIndex !== -1
+    ? (rowData[neighborhoodIndex] || '').trim()
+    : '');
   console.log(neighborhood);
 
   // declare variables (blank for now)
