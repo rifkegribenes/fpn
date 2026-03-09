@@ -432,10 +432,15 @@ function copyRowToAnotherSheet(sourceSheet, targetSheet) {
   for (var i = 0; i < sourceHeaders.length; i++) {
     const sourceHeader = sourceHeaders[i];
     
-    // Check if the source header matches any header in the target sheet
-    const targetIndex = targetHeaders.indexOf(sourceHeader);
-    
-    // If there's a match, copy the source row data to the correct column in the target row
+    // Try exact match first
+    let targetIndex = targetHeaders.indexOf(sourceHeader);
+
+    // Special case for Neighborhood fields
+    if (targetIndex === -1 && sourceHeader.startsWith("Neighborhood")) {
+      targetIndex = targetHeaders.findIndex(h => h.startsWith("Neighborhood"));
+    }
+
+    // If there's a match, copy the data
     if (targetIndex !== -1) {
       targetRowData[targetIndex] = sourceRowData[i];
     }
